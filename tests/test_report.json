@@ -1,0 +1,148 @@
+[
+  {
+    "timestamp": "2025-08-27T13:31:20.429199",
+    "test": "Conectividade",
+    "success": true,
+    "duration_ms": 857.27,
+    "data": {
+      "symbol_count": 56728
+    },
+    "error": null,
+    "details": {}
+  },
+  {
+    "timestamp": "2025-08-27T13:31:20.694181",
+    "test": "Informa\u00e7\u00f5es da Conta",
+    "success": true,
+    "duration_ms": 1122.26,
+    "data": {
+      "login": 72033102,
+      "server": "XPMT5-DEMO",
+      "company": "XP Investimentos CCTVM S/A",
+      "is_demo": null,
+      "balance": 10094128.67,
+      "currency": "BRL"
+    },
+    "error": null,
+    "details": {}
+  },
+  {
+    "timestamp": "2025-08-27T13:31:20.695285",
+    "test": "Valida\u00e7\u00e3o Demo",
+    "success": true,
+    "duration_ms": 1123.36,
+    "data": {
+      "allowed": true,
+      "reason": "Conta demo verificada",
+      "account_type": "demo",
+      "login": 72033102,
+      "server": "XPMT5-DEMO",
+      "company": "XP Investimentos CCTVM S/A"
+    },
+    "error": null,
+    "details": {}
+  },
+  {
+    "timestamp": "2025-08-27T13:31:20.949427",
+    "test": "Informa\u00e7\u00f5es do S\u00edmbolo",
+    "success": true,
+    "duration_ms": 1377.5,
+    "data": {
+      "symbol": null,
+      "bid": 20.56,
+      "ask": 20.7,
+      "spread": 14,
+      "digits": 2
+    },
+    "error": null,
+    "details": {}
+  },
+  {
+    "timestamp": "2025-08-27T13:31:20.950592",
+    "test": "Dados Hist\u00f3ricos",
+    "success": true,
+    "duration_ms": 1378.67,
+    "data": {
+      "candles": 18
+    },
+    "error": null,
+    "details": {}
+  },
+  {
+    "timestamp": "2025-08-27T13:31:21.203685",
+    "test": "Posi\u00e7\u00f5es Abertas",
+    "success": true,
+    "duration_ms": 1631.76,
+    "data": {
+      "count": 3
+    },
+    "error": null,
+    "details": {}
+  },
+  {
+    "timestamp": "2025-08-27T13:31:21.204911",
+    "test": "Ordens Pendentes",
+    "success": true,
+    "duration_ms": 1632.99,
+    "data": {
+      "count": 1
+    },
+    "error": null,
+    "details": {}
+  },
+  {
+    "timestamp": "2025-08-27T13:31:21.457777",
+    "test": "Hist\u00f3rico de Ordens",
+    "success": true,
+    "duration_ms": 1885.85,
+    "data": {
+      "status": "skipped",
+      "reason": "M\u00e9todos n\u00e3o implementados no servidor",
+      "error": "{'code': -1, 'message': 'Ferramenta desconhecida: history_orders_get'}"
+    },
+    "error": null,
+    "details": {}
+  },
+  {
+    "timestamp": "2025-08-27T13:31:21.457926",
+    "test": "Hist\u00f3rico de Deals",
+    "success": true,
+    "duration_ms": 1886.0,
+    "data": {
+      "status": "skipped",
+      "reason": "M\u00e9todos n\u00e3o implementados no servidor"
+    },
+    "error": null,
+    "details": {}
+  },
+  {
+    "timestamp": "2025-08-27T13:31:21.734934",
+    "test": "Ordem Compra",
+    "success": false,
+    "duration_ms": 2163.01,
+    "data": {
+      "retcode": null,
+      "retcode_desc": "C\u00f3digo desconhecido: None",
+      "deal": null,
+      "price": null,
+      "volume": null
+    },
+    "error": null,
+    "details": {}
+  },
+  {
+    "timestamp": "2025-08-27T13:31:21.758432",
+    "test": "Ordem Limitada",
+    "success": false,
+    "duration_ms": 2186.51,
+    "data": {
+      "retcode": null,
+      "retcode_desc": "C\u00f3digo desconhecido: None",
+      "order": null,
+      "price": 19.531999999999996,
+      "volume": 1.0
+    },
+    "error": null,
+    "details": {}
+  }
+]

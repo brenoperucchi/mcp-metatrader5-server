@@ -1,0 +1,47 @@
+{
+  "tool_name": "order_modify",
+  "description": "Modify an existing pending order.",
+  "signature": "def order_modify(ticket: int, price: Optional[float] = None, sl: Optional[float] = None, tp: Optional[float] = None)",
+  "parameters": {
+    "ticket": {
+      "name": "ticket",
+      "required": true,
+      "type": "int"
+    },
+    "price": {
+      "name": "price",
+      "required": false,
+      "type": "Optional[float]",
+      "default": "None"
+    },
+    "sl": {
+      "name": "sl",
+      "required": false,
+      "type": "Optional[float]",
+      "default": "None"
+    },
+    "tp": {
+      "name": "tp",
+      "required": false,
+      "type": "Optional[float]",
+      "default": "None"
+    }
+  },
+  "return_type": "Dict[(str, Any)]",
+  "source": "offline_analysis",
+  "timestamp": "2025-08-26T02:32:56.343518",
+  "example_request": {
+    "jsonrpc": "2.0",
+    "id": "example_123",
+    "method": "tools/call",
+    "params": {
+      "name": "order_modify",
+      "arguments": {
+        "ticket": 123,
+        "price": 1.23,
+        "sl": 1.23,
+        "tp": 1.23
+      }
+    }
+  }
+}

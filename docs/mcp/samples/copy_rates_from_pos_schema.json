@@ -1,0 +1,44 @@
+{
+  "tool_name": "copy_rates_from_pos",
+  "description": "Get bars from a specified symbol and timeframe starting from the specified position.",
+  "signature": "def copy_rates_from_pos(symbol: str, timeframe: int, start_pos: int, count: int)",
+  "parameters": {
+    "symbol": {
+      "name": "symbol",
+      "required": true,
+      "type": "str"
+    },
+    "timeframe": {
+      "name": "timeframe",
+      "required": true,
+      "type": "int"
+    },
+    "start_pos": {
+      "name": "start_pos",
+      "required": true,
+      "type": "int"
+    },
+    "count": {
+      "name": "count",
+      "required": true,
+      "type": "int"
+    }
+  },
+  "return_type": "List[Dict[(str, Any)]]",
+  "source": "offline_analysis",
+  "timestamp": "2025-08-26T02:32:56.335770",
+  "example_request": {
+    "jsonrpc": "2.0",
+    "id": "example_123",
+    "method": "tools/call",
+    "params": {
+      "name": "copy_rates_from_pos",
+      "arguments": {
+        "symbol": "ITSA3",
+        "timeframe": 1,
+        "start_pos": 123,
+        "count": 10
+      }
+    }
+  }
+}

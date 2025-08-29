@@ -1,0 +1,26 @@
+{
+  "tool_name": "positions_get_by_ticket",
+  "description": "Get an open position by its ticket.",
+  "signature": "def positions_get_by_ticket(ticket: int)",
+  "parameters": {
+    "ticket": {
+      "name": "ticket",
+      "required": true,
+      "type": "int"
+    }
+  },
+  "return_type": "Optional[Position]",
+  "source": "offline_analysis",
+  "timestamp": "2025-08-26T02:32:56.344957",
+  "example_request": {
+    "jsonrpc": "2.0",
+    "id": "example_123",
+    "method": "tools/call",
+    "params": {
+      "name": "positions_get_by_ticket",
+      "arguments": {
+        "ticket": 123
+      }
+    }
+  }
+}

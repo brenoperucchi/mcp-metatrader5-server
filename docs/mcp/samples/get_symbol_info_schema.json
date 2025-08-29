@@ -1,0 +1,26 @@
+{
+  "tool_name": "get_symbol_info",
+  "description": "Get information about a specific symbol.",
+  "signature": "def get_symbol_info(symbol: str)",
+  "parameters": {
+    "symbol": {
+      "name": "symbol",
+      "required": true,
+      "type": "str"
+    }
+  },
+  "return_type": "Dict[(str, Any)]",
+  "source": "offline_analysis",
+  "timestamp": "2025-08-26T02:32:56.334240",
+  "example_request": {
+    "jsonrpc": "2.0",
+    "id": "example_123",
+    "method": "tools/call",
+    "params": {
+      "name": "get_symbol_info",
+      "arguments": {
+        "symbol": "ITSA3"
+      }
+    }
+  }
+}

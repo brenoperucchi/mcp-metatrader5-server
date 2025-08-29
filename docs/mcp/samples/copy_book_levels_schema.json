@@ -1,0 +1,33 @@
+{
+  "tool_name": "copy_book_levels",
+  "description": "Get Level 2 market data (order book) for a specified symbol.",
+  "signature": "def copy_book_levels(symbol: str, depth: int = 10)",
+  "parameters": {
+    "symbol": {
+      "name": "symbol",
+      "required": true,
+      "type": "str"
+    },
+    "depth": {
+      "name": "depth",
+      "required": false,
+      "type": "int",
+      "default": "10"
+    }
+  },
+  "return_type": "List[Dict[(str, Any)]]",
+  "source": "offline_analysis",
+  "timestamp": "2025-08-26T02:32:56.339243",
+  "example_request": {
+    "jsonrpc": "2.0",
+    "id": "example_123",
+    "method": "tools/call",
+    "params": {
+      "name": "copy_book_levels",
+      "arguments": {
+        "symbol": "ITSA3",
+        "depth": 123
+      }
+    }
+  }
+}

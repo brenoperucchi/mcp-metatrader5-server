@@ -1,0 +1,26 @@
+{
+  "tool_name": "unsubscribe_market_book",
+  "description": "Unsubscribe from market book (Level 2) data for a symbol.",
+  "signature": "def unsubscribe_market_book(symbol: str)",
+  "parameters": {
+    "symbol": {
+      "name": "symbol",
+      "required": true,
+      "type": "str"
+    }
+  },
+  "return_type": "bool",
+  "source": "offline_analysis",
+  "timestamp": "2025-08-26T02:32:56.340670",
+  "example_request": {
+    "jsonrpc": "2.0",
+    "id": "example_123",
+    "method": "tools/call",
+    "params": {
+      "name": "unsubscribe_market_book",
+      "arguments": {
+        "symbol": "ITSA3"
+      }
+    }
+  }
+}

@@ -23,10 +23,18 @@ dependencies = [
     "fastmcp>=0.4.1",
     "httpx>=0.28.1",
     "mcp[cli]>=1.6.0",
-    "metatrader5>=5.0.4874",
     "pandas>=2.2.3",
     "numpy>=1.24.0",
     "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+mt5 = ["metatrader5>=5.0.5200"]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "isort>=5.0.0",
+    "mypy>=1.0.0"
 ]
 
 [project.urls]

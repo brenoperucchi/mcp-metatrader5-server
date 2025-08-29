@@ -1,0 +1,34 @@
+{
+  "tool_name": "positions_get",
+  "description": "Get open positions.",
+  "signature": "def positions_get(symbol: Optional[str] = None, group: Optional[str] = None)",
+  "parameters": {
+    "symbol": {
+      "name": "symbol",
+      "required": false,
+      "type": "Optional[str]",
+      "default": "None"
+    },
+    "group": {
+      "name": "group",
+      "required": false,
+      "type": "Optional[str]",
+      "default": "None"
+    }
+  },
+  "return_type": "List[Position]",
+  "source": "offline_analysis",
+  "timestamp": "2025-08-26T02:32:56.344523",
+  "example_request": {
+    "jsonrpc": "2.0",
+    "id": "example_123",
+    "method": "tools/call",
+    "params": {
+      "name": "positions_get",
+      "arguments": {
+        "symbol": "ITSA3",
+        "group": "example_value"
+      }
+    }
+  }
+}

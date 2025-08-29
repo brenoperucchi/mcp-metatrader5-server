@@ -1,0 +1,45 @@
+{
+  "tool_name": "copy_ticks_from_pos",
+  "description": "Get ticks from a specified symbol starting from the specified position.",
+  "signature": "def copy_ticks_from_pos(symbol: str, start_pos: int, count: int, flags: int = mt5.COPY_TICKS_ALL)",
+  "parameters": {
+    "symbol": {
+      "name": "symbol",
+      "required": true,
+      "type": "str"
+    },
+    "start_pos": {
+      "name": "start_pos",
+      "required": true,
+      "type": "int"
+    },
+    "count": {
+      "name": "count",
+      "required": true,
+      "type": "int"
+    },
+    "flags": {
+      "name": "flags",
+      "required": false,
+      "type": "int",
+      "default": "mt5.COPY_TICKS_ALL"
+    }
+  },
+  "return_type": "List[Dict[(str, Any)]]",
+  "source": "offline_analysis",
+  "timestamp": "2025-08-26T02:32:56.337400",
+  "example_request": {
+    "jsonrpc": "2.0",
+    "id": "example_123",
+    "method": "tools/call",
+    "params": {
+      "name": "copy_ticks_from_pos",
+      "arguments": {
+        "symbol": "ITSA3",
+        "start_pos": 123,
+        "count": 10,
+        "flags": 123
+      }
+    }
+  }
+}

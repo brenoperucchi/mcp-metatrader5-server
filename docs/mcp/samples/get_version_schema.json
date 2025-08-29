@@ -1,0 +1,18 @@
+{
+  "tool_name": "get_version",
+  "description": "Get the MetaTrader 5 version.",
+  "signature": "def get_version()",
+  "parameters": {},
+  "return_type": "Dict[(str, Any)]",
+  "source": "offline_analysis",
+  "timestamp": "2025-08-26T02:32:56.332524",
+  "example_request": {
+    "jsonrpc": "2.0",
+    "id": "example_123",
+    "method": "tools/call",
+    "params": {
+      "name": "get_version",
+      "arguments": {}
+    }
+  }
+}

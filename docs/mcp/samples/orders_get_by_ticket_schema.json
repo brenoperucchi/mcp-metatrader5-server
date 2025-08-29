@@ -1,0 +1,26 @@
+{
+  "tool_name": "orders_get_by_ticket",
+  "description": "Get an active order by its ticket.",
+  "signature": "def orders_get_by_ticket(ticket: int)",
+  "parameters": {
+    "ticket": {
+      "name": "ticket",
+      "required": true,
+      "type": "int"
+    }
+  },
+  "return_type": "Optional[Dict[(str, Any)]]",
+  "source": "offline_analysis",
+  "timestamp": "2025-08-26T02:32:56.346322",
+  "example_request": {
+    "jsonrpc": "2.0",
+    "id": "example_123",
+    "method": "tools/call",
+    "params": {
+      "name": "orders_get_by_ticket",
+      "arguments": {
+        "ticket": 123
+      }
+    }
+  }
+}

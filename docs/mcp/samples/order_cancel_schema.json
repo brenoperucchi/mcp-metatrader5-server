@@ -1,0 +1,26 @@
+{
+  "tool_name": "order_cancel",
+  "description": "Cancel a pending order.",
+  "signature": "def order_cancel(ticket: int)",
+  "parameters": {
+    "ticket": {
+      "name": "ticket",
+      "required": true,
+      "type": "int"
+    }
+  },
+  "return_type": "Dict[(str, Any)]",
+  "source": "offline_analysis",
+  "timestamp": "2025-08-26T02:32:56.342972",
+  "example_request": {
+    "jsonrpc": "2.0",
+    "id": "example_123",
+    "method": "tools/call",
+    "params": {
+      "name": "order_cancel",
+      "arguments": {
+        "ticket": 123
+      }
+    }
+  }
+}

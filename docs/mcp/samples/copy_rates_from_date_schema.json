@@ -1,0 +1,44 @@
+{
+  "tool_name": "copy_rates_from_date",
+  "description": "Get bars from a specified symbol and timeframe starting from the specified date.",
+  "signature": "def copy_rates_from_date(symbol: str, timeframe: int, date_from: datetime, count: int)",
+  "parameters": {
+    "symbol": {
+      "name": "symbol",
+      "required": true,
+      "type": "str"
+    },
+    "timeframe": {
+      "name": "timeframe",
+      "required": true,
+      "type": "int"
+    },
+    "date_from": {
+      "name": "date_from",
+      "required": true,
+      "type": "datetime"
+    },
+    "count": {
+      "name": "count",
+      "required": true,
+      "type": "int"
+    }
+  },
+  "return_type": "List[Dict[(str, Any)]]",
+  "source": "offline_analysis",
+  "timestamp": "2025-08-26T02:32:56.336450",
+  "example_request": {
+    "jsonrpc": "2.0",
+    "id": "example_123",
+    "method": "tools/call",
+    "params": {
+      "name": "copy_rates_from_date",
+      "arguments": {
+        "symbol": "ITSA3",
+        "timeframe": 1,
+        "date_from": "example",
+        "count": 10
+      }
+    }
+  }
+}

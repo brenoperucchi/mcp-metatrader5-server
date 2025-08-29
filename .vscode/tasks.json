@@ -1,0 +1,264 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Start MT5 MCP Server (Windows)",
+            "type": "shell",
+            "command": "uv",
+            "args": [
+                "run",
+                "mt5mcp",
+                "dev",
+                "--host",
+                "0.0.0.0",
+                "--port",
+                "50051"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "isBackground": true,
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [],
+            "runOptions": {
+                "runOn": "folderOpen"
+            },
+            "options": {
+                "env": {
+                    "MT5_MCP_DEV_MODE": "true",
+                    "MT5_MCP_HOST": "0.0.0.0",
+                    "MT5_MCP_PORT": "50051"
+                }
+            }
+        },
+        {
+            "label": "Install Dependencies (Windows)",
+            "type": "shell",
+            "command": "uv",
+            "args": [
+                "sync"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Test MCP Server Connection",
+            "type": "shell",
+            "command": "curl",
+            "args": [
+                "-X",
+                "POST",
+                "http://localhost:50051/mcp",
+                "-H",
+                "Content-Type: application/json",
+                "-d",
+                "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{}}"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run Example Client (macOS/Remote)",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "client/example_client.py"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [],
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "PYTHONPATH": "${workspaceFolder}/client"
+                }
+            }
+        },
+        {
+            "label": "Setup Windows Firewall Rule",
+            "type": "shell",
+            "command": "netsh",
+            "args": [
+                "advfirewall",
+                "firewall",
+                "add",
+                "rule",
+                "name='MT5 MCP Server'",
+                "dir=in",
+                "action=allow",
+                "protocol=TCP",
+                "localport=50051"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [],
+            "runOptions": {
+                "runOn": "folderOpen"
+            },
+            "windows": {
+                "options": {
+                    "shell": {
+                        "executable": "powershell.exe",
+                        "args": [
+                            "-Command"
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "label": "Check Network Connectivity",
+            "type": "shell",
+            "command": "powershell.exe",
+            "args": [
+                "-Command",
+                "Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.254.*'} | Select-Object IPAddress, InterfaceAlias"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Install Client Dependencies (macOS Remote)",
+            "type": "shell",
+            "command": "pip",
+            "args": [
+                "install",
+                "-r",
+                "client/requirements.txt"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Test MT5 Functions",
+            "type": "shell",
+            "command": "\"C:/Users/Breno Perucchi/AppData/Local/Programs/Python/Python313/python.exe\"",
+            "args": [
+                "test_mt5_functions.py"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Start Simple MCP Server",
+            "type": "shell",
+            "command": "\"C:/Users/Breno Perucchi/AppData/Local/Programs/Python/Python313/python.exe\"",
+            "args": [
+                "start_mcp_server.py",
+                "--host",
+                "0.0.0.0",
+                "--port",
+                "50051"
+            ],
+            "group": "build",
+            "isBackground": true,
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Test Complete B3 Flow",
+            "type": "shell",
+            "command": "\"C:/Users/Breno Perucchi/AppData/Local/Programs/Python/Python313/python.exe\"",
+            "args": [
+                "tests/integration/test_complete_b3.py"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Test Complete Forex Flow",
+            "type": "shell",
+            "command": "\"C:/Users/Breno Perucchi/AppData/Local/Programs/Python/Python313/python.exe\"",
+            "args": [
+                "tests/integration/test_complete_forex.py"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        }
+    ]
+}

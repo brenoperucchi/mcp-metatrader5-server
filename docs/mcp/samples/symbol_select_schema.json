@@ -1,0 +1,33 @@
+{
+  "tool_name": "symbol_select",
+  "description": "Select a symbol in the Market Watch window or remove a symbol from it.",
+  "signature": "def symbol_select(symbol: str, visible: bool = True)",
+  "parameters": {
+    "symbol": {
+      "name": "symbol",
+      "required": true,
+      "type": "str"
+    },
+    "visible": {
+      "name": "visible",
+      "required": false,
+      "type": "bool",
+      "default": "True"
+    }
+  },
+  "return_type": "bool",
+  "source": "offline_analysis",
+  "timestamp": "2025-08-26T02:32:56.335194",
+  "example_request": {
+    "jsonrpc": "2.0",
+    "id": "example_123",
+    "method": "tools/call",
+    "params": {
+      "name": "symbol_select",
+      "arguments": {
+        "symbol": "ITSA3",
+        "visible": true
+      }
+    }
+  }
+}

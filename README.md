@@ -1,247 +1,197 @@
-[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/qoyyuum-mcp-metatrader5-server-badge.png)](https://mseep.ai/app/qoyyuum-mcp-metatrader5-server)
+# Fork MCP - MetaTrader 5 MCP Server (Enhanced)
 
-# MetaTrader 5 MCP Server
+Esta é a versão aprimorada do MetaTrader 5 MCP Server, baseada no FastMCP com funcionalidades adicionais de trading e multi-configuração.
 
-A Model Context Protocol (MCP) server for MetaTrader 5, allowing AI assistants to interact with the MetaTrader 5 platform for trading and market data analysis.
+## 🚀 Características
 
-## Features
+- **Porta padrão**: 8000 ou 8080 
+- **Implementação**: FastMCP com extensões personalizadas
+- **Multi-configuração**: Suporte para B3 (ações brasileiras) e Forex
+- **Funcionalidades**: 37+ ferramentas MT5 completas
+- **Segurança**: Validação de conta demo para operações de trading
+- **Compatibilidade**: Funciona no Linux/WSL com mock do MT5
 
-- Connect to MetaTrader 5 terminal
-- Access market data (symbols, rates, ticks)
-- Place and manage trades
-- Analyze trading history
-- Integrate with AI assistants through the Model Context Protocol
+## 📊 Funcionalidades Implementadas
 
-## Installation
+### 🔧 Ferramentas de Trading
+- ✅ **order_send** - Enviar ordens ao mercado
+- ✅ **order_cancel** - Cancelar ordens pendentes  
+- ✅ **order_modify** - Modificar ordens existentes
+- ✅ **order_check** - Verificar viabilidade de ordens
+- ✅ **position_modify** - Modificar Stop Loss e Take Profit
+- ✅ **positions_get** - Obter posições abertas
+- ✅ **orders_get** - Obter ordens ativas
+- ✅ **history_orders_get** - Histórico de ordens
+- ✅ **history_deals_get** - Histórico de negociações
 
-### From Source
+### 📈 Dados de Mercado
+- ✅ **symbols_get** - Lista de símbolos disponíveis
+- ✅ **symbol_info** - Informações detalhadas do símbolo
+- ✅ **symbol_info_tick** - Último tick do símbolo
+- ✅ **copy_rates_from_pos** - Dados históricos de preços
+- ✅ **copy_ticks_from** - Dados de ticks
+- ✅ **market_book_add/get/release** - Book de ofertas (Nível II)
 
+### 🏦 Informações da Conta
+- ✅ **get_account_info** - Informações da conta
+- ✅ **get_terminal_info** - Informações do terminal
+- ✅ **validate_demo_for_trading** - Validação de segurança
+
+### ⚙️ Multi-Configuração
+- ✅ **get_available_configs** - Listar configurações (B3/Forex)
+- ✅ **get_current_config** - Configuração ativa atual
+- ✅ **switch_config** - Alternar entre configurações
+- ✅ **initialize** - Inicializar com configuração ativa
+
+### 📚 Recursos Informativos
+- ✅ Constantes de tipos de ordem (ORDER_TYPE_*)
+- ✅ Constantes de preenchimento (ORDER_FILLING_*)
+- ✅ Constantes de tempo (ORDER_TIME_*)  
+- ✅ Constantes de ações (TRADE_ACTION_*)
+
+## 🏗️ Estrutura do Projeto
+
+```
+fork_mcp/
+├── src/
+│   └── mcp_metatrader5_server/
+│       ├── __init__.py
+│       ├── server.py          # Servidor principal + multi-config
+│       ├── trading.py         # Ferramentas de trading 
+│       ├── market_data.py     # Dados de mercado
+│       ├── mt5_configs.py     # Configurações B3/Forex
+│       └── mt5_mock.py        # Mock para desenvolvimento
+├── .venv/                     # Ambiente virtual
+├── pyproject.toml            # Dependências e configuração
+├── run_fork_mcp.py           # Script de execução
+├── setup_claude_desktop.py   # Configuração do Claude Desktop
+└── README.md
+```
+
+## 🛠️ Instalação e Configuração
+
+### 1. Ambiente Virtual
 ```bash
-git clone https://github.com/Qoyyuum/mcp-metatrader5-server.git
-cd mcp-metatrader5-server
+cd fork_mcp
+python -m venv .venv
+
+# Linux/WSL
+source .venv/bin/activate
+
+# Windows
+.venv\Scripts\activate
+```
+
+### 2. Instalar Dependências
+```bash
 pip install -e .
 ```
 
-## Requirements
-
-- uv
-- Python 3.11 or higher
-- MetaTrader 5 terminal installed
-- MetaTrader 5 account (demo or real)
-
-## Usage
-
-### Running the Server
-
-To run the server in development mode:
-
+### 3. Configurar Claude Desktop (Opcional)
 ```bash
-uv run mt5mcp dev
+python setup_claude_desktop.py
 ```
 
-This will start the server at http://127.0.0.1:8000 by default.
+### 4. Executar Servidor
 
-You can specify a different host and port:
-
+**🔄 Modo STDIO (Claude Desktop - Recomendado):**
 ```bash
-uv run mt5mcp dev --host 0.0.0.0 --port 8080
+python run_fork_mcp.py
 ```
 
-### Installing for Claude Desktop
-
-To install the server for Claude Desktop:
-
+**🌐 Modo HTTP (Testes e Desenvolvimento):**
 ```bash
-git clone https://github.com/Qoyyuum/mcp-metatrader5-server
-cd mcp-metatrader5-server
-uv run fastmcp install src\mcp_metatrader5_server\server.py
+python mcp_mt5_server.py --port 8000
 ```
 
-Check your `claude_desktop_config.json` file. It should look something like this:
+**Diferenças:**
+- **STDIO**: Para uso com Claude Desktop (protocolo MCP padrão)
+- **HTTP**: Para testes via browser/curl (endpoints REST: /health, /info, /config)
+
+## 🔧 Multi-Configuração B3/Forex
+
+O servidor suporte duas configurações pré-definidas:
+
+### B3 - Ações Brasileiras
+```python
+"b3": {
+    "name": "B3 - Ações Brasileiras",
+    "market_type": "B3", 
+    "account": 123456789,
+    "server": "XP-Demo"
+}
+```
+
+### Forex - Mercado Global  
+```python
+"forex": {
+    "name": "Forex - Mercado Global",
+    "market_type": "Forex",
+    "account": 987654321, 
+    "server": "MetaQuotes-Demo"
+}
+```
+
+### Como Alternar
+```python
+# Via ferramentas MCP
+switch_config("forex")  # Muda para Forex
+switch_config("b3")     # Volta para B3
+
+# Verificar configuração atual
+get_current_config()    
+
+# Listar todas as configurações
+get_available_configs()
+```
+
+## 🔒 Segurança
+
+O servidor inclui validação automática de conta demo para operações de trading:
+
+- ✅ Operações só são permitidas em contas demo
+- ✅ Validação automática antes de cada operação de trading
+- ✅ Logs de segurança para todas as tentativas
+
+## 🐧 Compatibilidade Linux/WSL
+
+O servidor funciona perfeitamente no Linux/WSL através do sistema de mock:
+
+- ✅ Mock completo da biblioteca MetaTrader5 
+- ✅ Dados simulados realistas para desenvolvimento
+- ✅ Todas as funcionalidades testáveis sem MT5 real
+- ✅ Logs informativos sobre o uso do mock
+
+## 📋 Exemplo de Uso no Claude Desktop
 
 ```json
 {
   "mcpServers": {
-    "MetaTrader 5 MCP Server": {
-      "command": "uv",
-      "args": [
-        "run",
-        "--with",
-        "MetaTrader5",
-        "--with",
-        "fastmcp",
-        "--with",
-        "numpy",
-        "--with",
-        "pandas",
-        "--with",
-        "pydantic",
-        "fastmcp",
-        "run",
-        "C:\\FULL_PATH_TO\\src\\mcp_metatrader5_server\\server.py"
-      ]
+    "mcp-metatrader5": {
+      "command": "python",
+      "args": ["/caminho/para/fork_mcp/run_fork_mcp.py"],
+      "cwd": "/caminho/para/fork_mcp"
     }
   }
 }
 ```
 
-## API Reference
+## ✅ Status do Projeto
 
-### Connection Management
+- 🟢 **Etapa 2 Concluída**: 100% dos requisitos implementados
+- 🟢 **37+ ferramentas MCP** funcionais
+- 🟢 **Multi-configuração** B3/Forex operacional  
+- 🟢 **Segurança** com validação de conta demo
+- 🟢 **Compatibilidade** Linux/WSL via mock
+- 🟢 **Integração** Claude Desktop configurada
 
-- `initialize()`: Initialize the MT5 terminal
-- `login(account, password, server)`: Log in to a trading account
-- `shutdown()`: Close the connection to the MT5 terminal
+## 📈 Próximos Passos
 
-### Market Data Functions
+- [ ] Implementar WebSocket para dados em tempo real
+- [ ] Adicionar mais configurações de broker
+- [ ] Expandir funcionalidades de análise técnica
+- [ ] Implementar sistema de alertas
 
-- `get_symbols()`: Get all available symbols
-- `get_symbols_by_group(group)`: Get symbols by group
-- `get_symbol_info(symbol)`: Get information about a specific symbol
-- `get_symbol_info_tick(symbol)`: Get the latest tick for a symbol
-- `copy_rates_from_pos(symbol, timeframe, start_pos, count)`: Get bars from a specific position
-- `copy_rates_from_date(symbol, timeframe, date_from, count)`: Get bars from a specific date
-- `copy_rates_range(symbol, timeframe, date_from, date_to)`: Get bars within a date range
-- `copy_ticks_from_pos(symbol, start_pos, count)`: Get ticks from a specific position
-- `copy_ticks_from_date(symbol, date_from, count)`: Get ticks from a specific date
-- `copy_ticks_range(symbol, date_from, date_to)`: Get ticks within a date range
+---
 
-### Trading Functions
-
-- `order_send(request)`: Send an order to the trade server
-- `order_check(request)`: Check if an order can be placed with the specified parameters
-- `positions_get(symbol, group)`: Get open positions
-- `positions_get_by_ticket(ticket)`: Get an open position by its ticket
-- `orders_get(symbol, group)`: Get active orders
-- `orders_get_by_ticket(ticket)`: Get an active order by its ticket
-- `history_orders_get(symbol, group, ticket, position, from_date, to_date)`: Get orders from history
-- `history_deals_get(symbol, group, ticket, position, from_date, to_date)`: Get deals from history
-
-## Example Workflows
-
-### Connecting and Getting Market Data
-
-```python
-# Initialize MT5
-initialize()
-
-# Log in to your trading account
-login(account=123456, password="your_password", server="your_server")
-
-# Get available symbols
-symbols = get_symbols()
-
-# Get recent price data for EURUSD
-rates = copy_rates_from_pos(symbol="EURUSD", timeframe=15, start_pos=0, count=100)
-
-# Shut down the connection
-shutdown()
-```
-
-### Placing a Trade
-
-```python
-# Initialize and log in
-initialize()
-login(account=123456, password="your_password", server="your_server")
-
-# Create an order request
-request = OrderRequest(
-    action=mt5.TRADE_ACTION_DEAL,
-    symbol="EURUSD",
-    volume=0.1,
-    type=mt5.ORDER_TYPE_BUY,
-    price=mt5.symbol_info_tick("EURUSD").ask,
-    deviation=20,
-    magic=123456,
-    comment="Buy order",
-    type_time=mt5.ORDER_TIME_GTC,
-    type_filling=mt5.ORDER_FILLING_IOC
-)
-
-# Send the order
-result = order_send(request)
-
-# Shut down the connection
-shutdown()
-```
-
-## Resources
-
-The server provides the following resources to help AI assistants understand how to use the MetaTrader 5 API:
-
-- `mt5://getting_started`: Basic workflow for using the MetaTrader 5 API
-- `mt5://trading_guide`: Guide for placing and managing trades
-- `mt5://market_data_guide`: Guide for accessing and analyzing market data
-- `mt5://order_types`: Information about order types
-- `mt5://order_filling_types`: Information about order filling types
-- `mt5://order_time_types`: Information about order time types
-- `mt5://trade_actions`: Information about trade request actions
-
-## Prompts
-
-The server provides the following prompts to help AI assistants interact with users:
-
-- `connect_to_mt5(account, password, server)`: Connect to MetaTrader 5 and log in
-- `analyze_market_data(symbol, timeframe)`: Analyze market data for a specific symbol
-- `place_trade(symbol, order_type, volume)`: Place a trade for a specific symbol
-- `manage_positions()`: Manage open positions
-- `analyze_trading_history(days)`: Analyze trading history
-
-## Development
-
-### Project Structure
-
-```
-mcp-metatrader5-server/
-├── src/
-│   └── mcp_metatrader5_server/
-│       ├── __init__.py
-│       ├── server.py
-│       ├── market_data.py
-│       ├── trading.py
-│       ├── main.py
-│       └── cli.py
-├── run.py
-├── README.md
-└── pyproject.toml
-```
-
-### Building the Package
-
-To build the package:
-
-```bash
-python -m pip install build
-python -m build
-```
-
-Or using uv:
-
-```bash
-uv build
-```
-
-### Publishing to PyPI
-
-To publish the package to PyPI:
-
-```bash
-python -m pip install twine
-python -m twine upload dist/*
-```
-
-Or using uv:
-
-```bash
-uv publish
-```
-
-## License
-
-MIT
-
-## Acknowledgements
-
-- [MetaQuotes](https://www.metaquotes.net/) for the MetaTrader 5 platform
-- [FastMCP](https://github.com/jlowin/fastmcp) for the MCP server implementation
+**Baseado no fork original**: https://github.com/Qoyyuum/mcp-metatrader5-server

@@ -1,0 +1,45 @@
+{
+  "tool_name": "copy_ticks_from_date",
+  "description": "Get ticks from a specified symbol starting from the specified date.",
+  "signature": "def copy_ticks_from_date(symbol: str, date_from: datetime, count: int, flags: int = mt5.COPY_TICKS_ALL)",
+  "parameters": {
+    "symbol": {
+      "name": "symbol",
+      "required": true,
+      "type": "str"
+    },
+    "date_from": {
+      "name": "date_from",
+      "required": true,
+      "type": "datetime"
+    },
+    "count": {
+      "name": "count",
+      "required": true,
+      "type": "int"
+    },
+    "flags": {
+      "name": "flags",
+      "required": false,
+      "type": "int",
+      "default": "mt5.COPY_TICKS_ALL"
+    }
+  },
+  "return_type": "List[Dict[(str, Any)]]",
+  "source": "offline_analysis",
+  "timestamp": "2025-08-26T02:32:56.337962",
+  "example_request": {
+    "jsonrpc": "2.0",
+    "id": "example_123",
+    "method": "tools/call",
+    "params": {
+      "name": "copy_ticks_from_date",
+      "arguments": {
+        "symbol": "ITSA3",
+        "date_from": "example",
+        "count": 10,
+        "flags": 123
+      }
+    }
+  }
+}

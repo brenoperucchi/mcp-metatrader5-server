@@ -13,6 +13,20 @@ from importlib.metadata import version
 
 from mcp_metatrader5_server.main import mcp
 
+# Import settings
+try:
+    from config.settings import server_settings, network_settings
+except ImportError:
+    # Fallback values if config is not available
+    class DefaultSettings:
+        HOST = "127.0.0.1"
+        PORT = 50051
+        DEBUG = True
+        RELOAD = True
+    
+    server_settings = DefaultSettings()
+    network_settings = DefaultSettings()
+
 logger = logging.getLogger("mt5-mcp-server.cli")
 
 def get_version():
@@ -37,10 +51,12 @@ def main():
     # Dev command
     dev_parser = subparsers.add_parser("dev", help="Run the server in development mode")
     dev_parser.add_argument(
-        "--host", type=str, default="127.0.0.1", help="Host to bind to"
+        "--host", type=str, default=server_settings.HOST, 
+        help=f"Host to bind to (default: {server_settings.HOST})"
     )
     dev_parser.add_argument(
-        "--port", type=int, default=8000, help="Port to bind to"
+        "--port", type=int, default=server_settings.PORT, 
+        help=f"Port to bind to (default: {server_settings.PORT})"
     )
     
     # Install command
@@ -75,7 +91,7 @@ def main():
     elif args.command == "install":
         # Install for Claude Desktop
         try:
-            cmd = [sys.executable, "--with", "mcp-metatrader5-server", "fastmcp", "install", "src\mcp_metatrader5_server\server.py"]
+            cmd = [sys.executable, "--with", "mcp-metatrader5-server", "fastmcp", "install", r"src\mcp_metatrader5_server\server.py"]
             return subprocess.call(cmd)
         except ImportError:
             logger.error("Failed to install MCP server for Claude Desktop")

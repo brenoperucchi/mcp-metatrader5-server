@@ -1,0 +1,26 @@
+{
+  "tool_name": "get_symbols_by_group",
+  "description": "Get symbols that match a specific group or pattern.",
+  "signature": "def get_symbols_by_group(group: str)",
+  "parameters": {
+    "group": {
+      "name": "group",
+      "required": true,
+      "type": "str"
+    }
+  },
+  "return_type": "List[str]",
+  "source": "offline_analysis",
+  "timestamp": "2025-08-26T02:32:56.333879",
+  "example_request": {
+    "jsonrpc": "2.0",
+    "id": "example_123",
+    "method": "tools/call",
+    "params": {
+      "name": "get_symbols_by_group",
+      "arguments": {
+        "group": "example_value"
+      }
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "tool_name": "position_modify",
+  "description": "Modify Stop Loss and Take Profit of an open position.",
+  "signature": "def position_modify(ticket: int, sl: Optional[float] = None, tp: Optional[float] = None)",
+  "parameters": {
+    "ticket": {
+      "name": "ticket",
+      "required": true,
+      "type": "int"
+    },
+    "sl": {
+      "name": "sl",
+      "required": false,
+      "type": "Optional[float]",
+      "default": "None"
+    },
+    "tp": {
+      "name": "tp",
+      "required": false,
+      "type": "Optional[float]",
+      "default": "None"
+    }
+  },
+  "return_type": "Dict[(str, Any)]",
+  "source": "offline_analysis",
+  "timestamp": "2025-08-26T02:32:56.344116",
+  "example_request": {
+    "jsonrpc": "2.0",
+    "id": "example_123",
+    "method": "tools/call",
+    "params": {
+      "name": "position_modify",
+      "arguments": {
+        "ticket": 123,
+        "sl": 1.23,
+        "tp": 1.23
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "tool_name": "validate_demo_for_trading",
+  "description": "Validate if the connected account is a demo account before allowing trading operations.",
+  "signature": "def validate_demo_for_trading()",
+  "parameters": {},
+  "return_type": "Dict[(str, Any)]",
+  "source": "offline_analysis",
+  "timestamp": "2025-08-26T02:32:56.332837",
+  "example_request": {
+    "jsonrpc": "2.0",
+    "id": "example_123",
+    "method": "tools/call",
+    "params": {
+      "name": "validate_demo_for_trading",
+      "arguments": {}
+    }
+  }
+}

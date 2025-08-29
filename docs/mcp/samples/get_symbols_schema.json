@@ -1,0 +1,18 @@
+{
+  "tool_name": "get_symbols",
+  "description": "Get all available symbols (financial instruments) from the MetaTrader 5 terminal.",
+  "signature": "def get_symbols()",
+  "parameters": {},
+  "return_type": "List[str]",
+  "source": "offline_analysis",
+  "timestamp": "2025-08-26T02:32:56.333350",
+  "example_request": {
+    "jsonrpc": "2.0",
+    "id": "example_123",
+    "method": "tools/call",
+    "params": {
+      "name": "get_symbols",
+      "arguments": {}
+    }
+  }
+}

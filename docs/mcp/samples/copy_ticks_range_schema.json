@@ -1,0 +1,45 @@
+{
+  "tool_name": "copy_ticks_range",
+  "description": "Get ticks from a specified symbol within the specified date range.",
+  "signature": "def copy_ticks_range(symbol: str, date_from: datetime, date_to: datetime, flags: int = mt5.COPY_TICKS_ALL)",
+  "parameters": {
+    "symbol": {
+      "name": "symbol",
+      "required": true,
+      "type": "str"
+    },
+    "date_from": {
+      "name": "date_from",
+      "required": true,
+      "type": "datetime"
+    },
+    "date_to": {
+      "name": "date_to",
+      "required": true,
+      "type": "datetime"
+    },
+    "flags": {
+      "name": "flags",
+      "required": false,
+      "type": "int",
+      "default": "mt5.COPY_TICKS_ALL"
+    }
+  },
+  "return_type": "List[Dict[(str, Any)]]",
+  "source": "offline_analysis",
+  "timestamp": "2025-08-26T02:32:56.338452",
+  "example_request": {
+    "jsonrpc": "2.0",
+    "id": "example_123",
+    "method": "tools/call",
+    "params": {
+      "name": "copy_ticks_range",
+      "arguments": {
+        "symbol": "ITSA3",
+        "date_from": "example",
+        "date_to": "example",
+        "flags": 123
+      }
+    }
+  }
+}

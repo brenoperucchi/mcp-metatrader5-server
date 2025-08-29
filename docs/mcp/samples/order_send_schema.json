@@ -1,0 +1,26 @@
+{
+  "tool_name": "order_send",
+  "description": "Send an order to the trade server.",
+  "signature": "def order_send(request: OrderRequest)",
+  "parameters": {
+    "request": {
+      "name": "request",
+      "required": true,
+      "type": "OrderRequest"
+    }
+  },
+  "return_type": "OrderResult",
+  "source": "offline_analysis",
+  "timestamp": "2025-08-26T02:32:56.341942",
+  "example_request": {
+    "jsonrpc": "2.0",
+    "id": "example_123",
+    "method": "tools/call",
+    "params": {
+      "name": "order_send",
+      "arguments": {
+        "request": "example"
+      }
+    }
+  }
+}

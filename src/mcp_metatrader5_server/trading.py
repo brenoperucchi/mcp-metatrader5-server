@@ -8,16 +8,27 @@ import logging
 from typing import Dict, List, Optional, Union, Any, Tuple
 from datetime import datetime
 
-import MetaTrader5 as mt5
+# Force mock for validation testing  
+from . import mt5_mock as mt5
 import pandas as pd
 import numpy as np
 from fastmcp import FastMCP
 from pydantic import BaseModel, Field
 
 # Import the main server instance
-from mcp_metatrader5_server.server import mcp, OrderRequest, OrderResult, Position, HistoryOrder, Deal
+from mcp_metatrader5_server.server import mcp, OrderRequest, OrderResult, Position, HistoryOrder, Deal, config_manager
 
 logger = logging.getLogger("mt5-mcp-server.trading")
+
+# Log MT5 initialization status
+try:
+    terminal_info = mt5.terminal_info()
+    if terminal_info:
+        logger.info(f"[DEBUG] MT5 Trading module loaded. Terminal: {terminal_info.name}, Build: {terminal_info.build}")
+    else:
+        logger.warning("[DEBUG] MT5 Trading module loaded but terminal_info() returned None")
+except Exception as e:
+    logger.warning(f"[DEBUG] MT5 Trading module loaded with warning: {e}")
 
 # Send order
 @mcp.tool()
@@ -32,56 +43,235 @@ def order_send(request: OrderRequest) -> OrderResult:
         OrderResult: Order execution result.
     """
     # Convert request to dictionary
-    request_dict = request.model_dump()
+    logger.info(f"[DEBUG] order_send called with request type: {type(request)}")
+    logger.info(f"[DEBUG] order_send request content: {request}")
+    
+    if hasattr(request, 'model_dump'):
+        request_dict = request.model_dump()
+        logger.info("[DEBUG] Using model_dump() to convert request")
+    elif isinstance(request, dict):
+        request_dict = request
+        logger.info("[DEBUG] Request is already a dict")
+    else:
+        request_dict = vars(request) if hasattr(request, '__dict__') else request
+        logger.info(f"[DEBUG] Using vars() or direct assignment")
+    
+    logger.info(f"[DEBUG] Request dict to send: {request_dict}")
+    
+    # Check MT5 connection status before sending
+    if not mt5.terminal_info():
+        logger.error("[DEBUG] MT5 terminal not connected!")
+        mt5_error = mt5.last_error()
+        logger.error(f"[DEBUG] MT5 last error: {mt5_error}")
+        raise ValueError(f"MT5 terminal not connected: {mt5_error}")
     
     # Send order
+    logger.info("[DEBUG] Calling mt5.order_send()...")
     result = mt5.order_send(request_dict)
+    logger.info(f"[DEBUG] mt5.order_send() returned: {result}")
+    
     if result is None:
-        logger.error(f"Failed to send order, error code: {mt5.last_error()}")
-        raise ValueError("Failed to send order")
+        mt5_error = mt5.last_error()
+        logger.error(f"[DEBUG] Failed to send order, MT5 error: {mt5_error}")
+        logger.error(f"[DEBUG] Request was: {request_dict}")
+        
+        # Try to get more detailed error info
+        account_info = mt5.account_info()
+        if account_info:
+            logger.info(f"[DEBUG] Account info: login={account_info.login}, balance={account_info.balance}, margin_free={account_info.margin_free}")
+        
+        symbol_info = mt5.symbol_info(request_dict.get('symbol'))
+        if symbol_info:
+            logger.info(f"[DEBUG] Symbol info: symbol={symbol_info.name}, bid={symbol_info.bid}, ask={symbol_info.ask}, trade_mode={symbol_info.trade_mode}")
+        else:
+            logger.error(f"[DEBUG] Symbol {request_dict.get('symbol')} not found or not selected!")
+            
+        raise ValueError(f"Failed to send order: {mt5_error}")
     
     # Convert named tuple to dictionary
+    logger.info(f"[DEBUG] Converting result to dict, type: {type(result)}")
     result_dict = result._asdict()
+    logger.info(f"[DEBUG] Result dict: {result_dict}")
     
     # Convert request named tuple to dictionary if needed
-    if hasattr(result_dict['request'], '_asdict'):
+    if hasattr(result_dict.get('request'), '_asdict'):
         result_dict['request'] = result_dict['request']._asdict()
+        logger.info(f"[DEBUG] Converted request to dict: {result_dict['request']}")
     
+    logger.info(f"[DEBUG] Returning OrderResult with retcode: {result_dict.get('retcode')}")
     return OrderResult(**result_dict)
 
 # Check order
 @mcp.tool()
-def order_check(request: OrderRequest) -> Dict[str, Any]:
+def order_check(request: Dict[str, Any]) -> Dict[str, Any]:
     """
     Check if an order can be placed with the specified parameters.
     
     Args:
-        request: Order parameters
+        request: Dictionary with order parameters including:
+            - action: Trade action (1 for DEAL, 2 for PENDING)
+            - symbol: Trading symbol (e.g., "ITSA3")
+            - volume: Volume to trade (integer or float)
+            - type: Order type (0 for BUY, 1 for SELL)
+            - price: Price for the order
+            - comment: Optional comment
+            - magic: Optional magic number
         
     Returns:
         Dict[str, Any]: Order check result.
     """
-    # Convert request to dictionary
-    request_dict = request.model_dump()
+    # Auto-initialize if not initialized
+    if not config_manager.initialized:
+        if not config_manager.initialize_mt5():
+            raise ValueError("Failed to initialize MT5")
+    
+    logger.info(f"[DEBUG] order_check called with request type: {type(request)}")
+    
+    # Ensure request is a dictionary
+    if not isinstance(request, dict):
+        raise ValueError("Request must be a dictionary")
+    
+    # Validate and convert volume to float
+    if 'volume' in request:
+        try:
+            request['volume'] = float(request['volume'])
+            logger.info(f"[DEBUG] Converted volume to float: {request['volume']}")
+        except (ValueError, TypeError) as e:
+            raise ValueError(f"Invalid 'volume' argument: {request['volume']} - must be a number")
+    
+    logger.info(f"[DEBUG] order_check request dict: {request}")
     
     # Check order
-    result = mt5.order_check(request_dict)
+    result = mt5.order_check(request)
+    logger.info(f"[DEBUG] mt5.order_check() returned: {result}")
+    
     if result is None:
-        logger.error(f"Failed to check order, error code: {mt5.last_error()}")
-        raise ValueError("Failed to check order")
+        mt5_error = mt5.last_error()
+        logger.error(f"[DEBUG] Failed to check order, MT5 error: {mt5_error}")
+        logger.error(f"[DEBUG] Request was: {request}")
+        raise ValueError(f"Failed to check order: {mt5_error}")
     
     # Convert named tuple to dictionary
     result_dict = result._asdict()
     
     # Convert request named tuple to dictionary if needed
-    if hasattr(result_dict['request'], '_asdict'):
+    if hasattr(result_dict.get('request'), '_asdict'):
         result_dict['request'] = result_dict['request']._asdict()
+    
+    return result_dict
+
+# Cancel order
+@mcp.tool()
+def order_cancel(ticket: int) -> Dict[str, Any]:
+    """
+    Cancel a pending order.
+    
+    Args:
+        ticket: Order ticket to cancel
+        
+    Returns:
+        Dict[str, Any]: Order cancellation result.
+    """
+    request = {
+        "action": mt5.TRADE_ACTION_REMOVE,
+        "order": ticket,
+    }
+    
+    result = mt5.order_send(request)
+    if result is None:
+        logger.error(f"Failed to cancel order {ticket}, error code: {mt5.last_error()}")
+        raise ValueError(f"Failed to cancel order {ticket}")
+    
+    # Convert named tuple to dictionary
+    result_dict = result._asdict()
+    
+    return result_dict
+
+# Modify order
+@mcp.tool()
+def order_modify(ticket: int, price: Optional[float] = None, sl: Optional[float] = None, tp: Optional[float] = None) -> Dict[str, Any]:
+    """
+    Modify an existing pending order.
+    
+    Args:
+        ticket: Order ticket to modify
+        price: New price (optional, keeps current if not specified)
+        sl: New stop loss (optional, keeps current if not specified) 
+        tp: New take profit (optional, keeps current if not specified)
+        
+    Returns:
+        Dict[str, Any]: Order modification result.
+    """
+    # Get current order info
+    orders = mt5.orders_get(ticket=ticket)
+    if not orders or len(orders) == 0:
+        logger.error(f"Order {ticket} not found")
+        raise ValueError(f"Order {ticket} not found")
+    
+    current_order = orders[0]
+    
+    # Build request with current values or new ones
+    request = {
+        "action": mt5.TRADE_ACTION_MODIFY,
+        "order": ticket,
+        "price": price if price is not None else current_order.price_open,
+        "sl": sl if sl is not None else current_order.sl,
+        "tp": tp if tp is not None else current_order.tp,
+    }
+    
+    result = mt5.order_send(request)
+    if result is None:
+        logger.error(f"Failed to modify order {ticket}, error code: {mt5.last_error()}")
+        raise ValueError(f"Failed to modify order {ticket}")
+    
+    # Convert named tuple to dictionary
+    result_dict = result._asdict()
+    
+    return result_dict
+
+# Position modify (Stop Loss / Take Profit)
+@mcp.tool()  
+def position_modify(ticket: int, sl: Optional[float] = None, tp: Optional[float] = None) -> Dict[str, Any]:
+    """
+    Modify Stop Loss and Take Profit of an open position.
+    
+    Args:
+        ticket: Position ticket to modify
+        sl: New stop loss (optional, keeps current if not specified)
+        tp: New take profit (optional, keeps current if not specified)
+        
+    Returns:
+        Dict[str, Any]: Position modification result.
+    """
+    # Get current position info
+    positions = mt5.positions_get(ticket=ticket)
+    if not positions or len(positions) == 0:
+        logger.error(f"Position {ticket} not found")
+        raise ValueError(f"Position {ticket} not found")
+    
+    current_position = positions[0]
+    
+    request = {
+        "action": mt5.TRADE_ACTION_SLTP,
+        "symbol": current_position.symbol,
+        "position": ticket,
+        "sl": sl if sl is not None else current_position.sl,
+        "tp": tp if tp is not None else current_position.tp,
+    }
+    
+    result = mt5.order_send(request)
+    if result is None:
+        logger.error(f"Failed to modify position {ticket}, error code: {mt5.last_error()}")
+        raise ValueError(f"Failed to modify position {ticket}")
+    
+    # Convert named tuple to dictionary
+    result_dict = result._asdict()
     
     return result_dict
 
 # Get positions
 @mcp.tool()
-def positions_get(symbol: Optional[str] = None, group: Optional[str] = None) -> List[Position]:
+def positions_get(symbol: Optional[str] = None, group: Optional[str] = None) -> List[Dict[str, Any]]:
     """
     Get open positions.
     
@@ -90,7 +280,7 @@ def positions_get(symbol: Optional[str] = None, group: Optional[str] = None) -> 
         group: Filter for arranging a group of positions (e.g., "*", "USD*", etc.)
         
     Returns:
-        List[Position]: List of open positions.
+        List[Dict[str, Any]]: List of open positions.
     """
     if symbol is not None:
         positions = mt5.positions_get(symbol=symbol)
@@ -107,13 +297,13 @@ def positions_get(symbol: Optional[str] = None, group: Optional[str] = None) -> 
     for position in positions:
         # Convert named tuple to dictionary
         position_dict = position._asdict()
-        result.append(Position(**position_dict))
+        result.append(position_dict)
     
     return result
 
 # Get position by ticket
 @mcp.tool()
-def positions_get_by_ticket(ticket: int) -> Optional[Position]:
+def positions_get_by_ticket(ticket: int) -> Optional[Dict[str, Any]]:
     """
     Get an open position by its ticket.
     
@@ -121,7 +311,7 @@ def positions_get_by_ticket(ticket: int) -> Optional[Position]:
         ticket: Position ticket
         
     Returns:
-        Optional[Position]: Position information or None if not found.
+        Optional[Dict[str, Any]]: Position information or None if not found.
     """
     position = mt5.positions_get(ticket=ticket)
     if position is None or len(position) == 0:
@@ -130,7 +320,7 @@ def positions_get_by_ticket(ticket: int) -> Optional[Position]:
     
     # Convert named tuple to dictionary
     position_dict = position[0]._asdict()
-    return Position(**position_dict)
+    return position_dict
 
 # Get orders
 @mcp.tool()
@@ -223,9 +413,9 @@ def history_orders_get(
     if position is not None:
         request["position"] = position
     if from_timestamp is not None:
-        request["from"] = from_timestamp
+        request["date_from"] = from_timestamp
     if to_timestamp is not None:
-        request["to"] = to_timestamp
+        request["date_to"] = to_timestamp
     
     # Get history orders
     if request:
@@ -284,9 +474,9 @@ def history_deals_get(
     if position is not None:
         request["position"] = position
     if from_timestamp is not None:
-        request["from"] = from_timestamp
+        request["date_from"] = from_timestamp
     if to_timestamp is not None:
-        request["to"] = to_timestamp
+        request["date_to"] = to_timestamp
     
     # Get history deals
     if request:

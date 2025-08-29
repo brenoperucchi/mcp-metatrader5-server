@@ -1,0 +1,70 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug MCP Server",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/mcp_metatrader5_server/cli.py",
+            "args": [
+                "dev",
+                "--host",
+                "0.0.0.0",
+                "--port",
+                "50051"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "MT5_MCP_DEV_MODE": "true",
+                "MT5_MCP_DEBUG": "true",
+                "PYTHONPATH": "${workspaceFolder}/src"
+            },
+            "preLaunchTask": "Install Dependencies (Windows)"
+        },
+        {
+            "name": "Debug Client (Local Test)",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/client/example_client.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/client"
+            },
+            "preLaunchTask": "Install Client Dependencies (macOS Remote)"
+        },
+        {
+            "name": "Debug Market Data Tools",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "tests/test_market_data.py",
+                "-v",
+                "-s"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src"
+            }
+        },
+        {
+            "name": "Debug Trading Tools",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "tests/test_trading.py",
+                "-v",
+                "-s"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src"
+            }
+        }
+    ]
+}

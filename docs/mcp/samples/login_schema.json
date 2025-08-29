@@ -1,0 +1,38 @@
+{
+  "tool_name": "login",
+  "description": "Log in to the MetaTrader 5 trading account.",
+  "signature": "def login(login: int, password: str, server: str)",
+  "parameters": {
+    "login": {
+      "name": "login",
+      "required": true,
+      "type": "int"
+    },
+    "password": {
+      "name": "password",
+      "required": true,
+      "type": "str"
+    },
+    "server": {
+      "name": "server",
+      "required": true,
+      "type": "str"
+    }
+  },
+  "return_type": "bool",
+  "source": "offline_analysis",
+  "timestamp": "2025-08-26T02:32:56.330805",
+  "example_request": {
+    "jsonrpc": "2.0",
+    "id": "example_123",
+    "method": "tools/call",
+    "params": {
+      "name": "login",
+      "arguments": {
+        "login": 123,
+        "password": "example_value",
+        "server": "example_value"
+      }
+    }
+  }
+}

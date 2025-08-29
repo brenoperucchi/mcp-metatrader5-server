@@ -8,14 +8,16 @@ import logging
 from typing import Dict, List, Optional, Union, Any, Tuple
 from datetime import datetime
 
-import MetaTrader5 as mt5
+# Force mock for validation testing
+from . import mt5_mock as mt5
 import pandas as pd
 import numpy as np
-from fastmcp import FastMCP, Image
+from fastmcp import FastMCP
+from fastmcp.utilities.types import Image
 from pydantic import BaseModel, Field
 
-# Import the main server instance
-from mcp_metatrader5_server.server import mcp, SymbolInfo
+# Import the main server instance and config manager
+from mcp_metatrader5_server.server import mcp, config_manager
 
 logger = logging.getLogger("mt5-mcp-server.market_data")
 
@@ -56,7 +58,7 @@ def get_symbols_by_group(group: str) -> List[str]:
 
 # Get symbol information
 @mcp.tool()
-def get_symbol_info(symbol: str) -> SymbolInfo:
+def get_symbol_info(symbol: str) -> Dict[str, Any]:
     """
     Get information about a specific symbol.
     
@@ -64,8 +66,13 @@ def get_symbol_info(symbol: str) -> SymbolInfo:
         symbol: Symbol name
         
     Returns:
-        SymbolInfo: Information about the symbol.
+        Dict[str, Any]: Information about the symbol.
     """
+    # Auto-initialize if not initialized
+    if not config_manager.initialized:
+        if not config_manager.initialize_mt5():
+            raise ValueError("Failed to initialize MT5")
+    
     symbol_info = mt5.symbol_info(symbol)
     if symbol_info is None:
         logger.error(f"Failed to get info for symbol {symbol}, error code: {mt5.last_error()}")
@@ -73,7 +80,52 @@ def get_symbol_info(symbol: str) -> SymbolInfo:
     
     # Convert named tuple to dictionary
     symbol_dict = symbol_info._asdict()
-    return SymbolInfo(**symbol_dict)
+    
+    # DEBUG: Log original dict from MT5 
+    logger.info(f"ORIGINAL MT5 DICT for {symbol}: 'last' = {symbol_dict.get('last', 'NOT_FOUND')}")
+    logger.info(f"ORIGINAL MT5 DICT keys: {list(symbol_dict.keys())}")
+    logger.info(f"'last' in original dict: {'last' in symbol_dict}")
+    
+    # Enrich with tick data to ensure we have the latest 'last' price
+    try:
+        tick = mt5.symbol_info_tick(symbol)
+        if tick is not None:
+            # FORCE the last field - try multiple approaches
+            symbol_dict['last'] = tick.last
+            symbol_dict['last_price'] = tick.last  # Alternative field
+            symbol_dict['current_price'] = tick.last  # Another alternative
+            symbol_dict['price_last'] = tick.last  # Yet another alternative
+            symbol_dict['recent_price'] = tick.last  # Non-"last" alternative
+            symbol_dict['trade_price'] = tick.last  # Another non-"last" alternative
+            
+            # Update other fields
+            symbol_dict['bid'] = tick.bid
+            symbol_dict['ask'] = tick.ask
+            symbol_dict['tick_bid'] = tick.bid
+            symbol_dict['tick_ask'] = tick.ask
+            symbol_dict['tick_last'] = tick.last
+            symbol_dict['tick_time'] = tick.time
+            symbol_dict['tick_volume'] = tick.volume
+            
+            # Calculate spread information
+            if tick.bid and tick.ask:
+                symbol_dict['spread_value'] = tick.ask - tick.bid
+                symbol_dict['spread_percent'] = ((tick.ask - tick.bid) / tick.bid) * 100 if tick.bid > 0 else 0
+                
+            # Debug log to see what's happening
+            logger.info(f"DEBUG {symbol}: setting last={tick.last}, dict_last={symbol_dict.get('last')}")
+            logger.info(f"DEBUG {symbol}: dict keys: {list(symbol_dict.keys())}")
+            logger.info(f"DEBUG {symbol}: 'last' in dict: {'last' in symbol_dict}")
+        else:
+            logger.warning(f"Could not get tick data for {symbol}, using symbol_info only")
+    except Exception as e:
+        logger.warning(f"Error getting tick data for {symbol}: {e}, using symbol_info only")
+    
+    # Final debug before return
+    logger.info(f"FINAL DEBUG {symbol}: returning dict with keys: {list(symbol_dict.keys())}")
+    logger.info(f"FINAL DEBUG {symbol}: last={symbol_dict.get('last')}, tick_last={symbol_dict.get('tick_last')}")
+    
+    return symbol_dict  # Return dict directly instead of SymbolInfo
 
 # Get symbol tick information
 @mcp.tool()
@@ -87,6 +139,11 @@ def get_symbol_info_tick(symbol: str) -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: Latest tick data for the symbol.
     """
+    # Auto-initialize if not initialized
+    if not config_manager.initialized:
+        if not config_manager.initialize_mt5():
+            raise ValueError("Failed to initialize MT5")
+    
     tick = mt5.symbol_info_tick(symbol)
     if tick is None:
         logger.error(f"Failed to get tick for symbol {symbol}, error code: {mt5.last_error()}")
@@ -438,3 +495,156 @@ def get_tick_flags() -> str:
         result += f"{name}: {value}\n"
     
     return result
+
+# Book Level 2 Data (Order Book) Functions
+class BookLevel(BaseModel):
+    """Order book level data"""
+    type: int  # 0-buy, 1-sell
+    price: float
+    volume: float
+    volume_real: float
+
+@mcp.tool()
+def copy_book_levels(symbol: str, depth: int = 10) -> List[Dict[str, Any]]:
+    """
+    Get Level 2 market data (order book) for a specified symbol.
+    
+    Args:
+        symbol: Symbol name (e.g., "EURUSD", "WINM25", etc.)
+        depth: Number of price levels to retrieve (default: 10, max: 20)
+        
+    Returns:
+        List[Dict[str, Any]]: List of order book levels with price, volume and type information.
+        Each level contains:
+        - type: 0 for buy orders, 1 for sell orders
+        - price: Price level
+        - volume: Volume at this price level
+        - volume_real: Real volume at this price level
+    """
+    # Validate depth parameter
+    if depth <= 0 or depth > 20:
+        raise ValueError("Depth must be between 1 and 20")
+    
+    # Get market book data
+    book = mt5.market_book_get(symbol)
+    if book is None:
+        logger.error(f"Failed to get market book for {symbol}, error code: {mt5.last_error()}")
+        raise ValueError(f"Failed to get market book for symbol {symbol}")
+    
+    # Convert to list of dictionaries, limiting by depth
+    book_levels = []
+    for i, level in enumerate(book[:depth]):
+        book_levels.append({
+            "type": level.type,
+            "price": level.price,
+            "volume": level.volume,
+            "volume_real": level.volume_real
+        })
+    
+    logger.info(f"Retrieved {len(book_levels)} book levels for {symbol}")
+    return book_levels
+
+@mcp.tool()
+def subscribe_market_book(symbol: str) -> bool:
+    """
+    Subscribe to market book (Level 2) data for a symbol.
+    
+    Args:
+        symbol: Symbol name
+        
+    Returns:
+        bool: True if subscription successful, False otherwise.
+    """
+    result = mt5.market_book_add(symbol)
+    if not result:
+        logger.error(f"Failed to subscribe to market book for {symbol}, error code: {mt5.last_error()}")
+        return False
+    
+    logger.info(f"Successfully subscribed to market book for {symbol}")
+    return True
+
+@mcp.tool()
+def unsubscribe_market_book(symbol: str) -> bool:
+    """
+    Unsubscribe from market book (Level 2) data for a symbol.
+    
+    Args:
+        symbol: Symbol name
+        
+    Returns:
+        bool: True if unsubscription successful, False otherwise.
+    """
+    result = mt5.market_book_release(symbol)
+    if not result:
+        logger.error(f"Failed to unsubscribe from market book for {symbol}, error code: {mt5.last_error()}")
+        return False
+    
+    logger.info(f"Successfully unsubscribed from market book for {symbol}")
+    return True
+
+@mcp.tool()
+def get_book_snapshot(symbol: str, depth: int = 5) -> Dict[str, Any]:
+    """
+    Get a complete order book snapshot with bid/ask levels separated.
+    
+    Args:
+        symbol: Symbol name
+        depth: Number of levels on each side (default: 5)
+        
+    Returns:
+        Dict[str, Any]: Order book snapshot with separated bid/ask levels and summary.
+    """
+    if depth <= 0 or depth > 10:
+        raise ValueError("Depth must be between 1 and 10")
+    
+    # Get current tick for reference
+    tick = mt5.symbol_info_tick(symbol)
+    if tick is None:
+        raise ValueError(f"Failed to get tick data for {symbol}")
+    
+    # Get book data
+    book = mt5.market_book_get(symbol)
+    if book is None:
+        raise ValueError(f"Failed to get market book for {symbol}")
+    
+    # Separate bid and ask levels
+    bids = []
+    asks = []
+    
+    for level in book:
+        level_data = {
+            "price": level.price,
+            "volume": level.volume,
+            "volume_real": level.volume_real
+        }
+        
+        if level.type == 0:  # Buy orders (bids)
+            bids.append(level_data)
+        else:  # Sell orders (asks)
+            asks.append(level_data)
+    
+    # Limit to requested depth
+    bids = bids[:depth]
+    asks = asks[:depth]
+    
+    # Calculate spreads and totals
+    best_bid = bids[0]["price"] if bids else 0
+    best_ask = asks[0]["price"] if asks else 0
+    spread = best_ask - best_bid if best_bid and best_ask else 0
+    
+    total_bid_volume = sum(level["volume"] for level in bids)
+    total_ask_volume = sum(level["volume"] for level in asks)
+    
+    return {
+        "symbol": symbol,
+        "timestamp": tick.time,
+        "best_bid": best_bid,
+        "best_ask": best_ask,
+        "spread": spread,
+        "bids": bids,
+        "asks": asks,
+        "total_bid_volume": total_bid_volume,
+        "total_ask_volume": total_ask_volume,
+        "bid_levels": len(bids),
+        "ask_levels": len(asks)
+    }

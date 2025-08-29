@@ -1,0 +1,33 @@
+{
+  "tool_name": "get_book_snapshot",
+  "description": "Get a complete order book snapshot with bid/ask levels separated.",
+  "signature": "def get_book_snapshot(symbol: str, depth: int = 5)",
+  "parameters": {
+    "symbol": {
+      "name": "symbol",
+      "required": true,
+      "type": "str"
+    },
+    "depth": {
+      "name": "depth",
+      "required": false,
+      "type": "int",
+      "default": "5"
+    }
+  },
+  "return_type": "Dict[(str, Any)]",
+  "source": "offline_analysis",
+  "timestamp": "2025-08-26T02:32:56.341301",
+  "example_request": {
+    "jsonrpc": "2.0",
+    "id": "example_123",
+    "method": "tools/call",
+    "params": {
+      "name": "get_book_snapshot",
+      "arguments": {
+        "symbol": "ITSA3",
+        "depth": 123
+      }
+    }
+  }
+}

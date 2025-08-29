@@ -7,7 +7,7 @@ This is the main entry point for the MetaTrader 5 MCP server.
 import logging
 import os
 from fastmcp import FastMCP
-from fastmcp.prompts.base import UserMessage, AssistantMessage
+from mcp.types import PromptMessage, TextContent
 
 # Import server modules
 from mcp_metatrader5_server.server import mcp
@@ -34,14 +34,10 @@ def connect_to_mt5(account: int, password: str, server: str) -> list:
         server: Trading server name
     """
     return [
-        UserMessage("I need to connect to my MetaTrader 5 account and start trading."),
-        AssistantMessage(
-            "I'll help you connect to your MetaTrader 5 account. First, we need to initialize the MT5 terminal and then log in to your account."
-        ),
-        AssistantMessage(
-            f"Let me do that for you. I'll use your account number {account}, connect to the {server} server, and log in."
-        ),
-        UserMessage("Great, please proceed with the connection."),
+        PromptMessage(role="user", content=TextContent(type="text", text="I need to connect to my MetaTrader 5 account and start trading.")),
+        PromptMessage(role="assistant", content=TextContent(type="text", text="I'll help you connect to your MetaTrader 5 account. First, we need to initialize the MT5 terminal and then log in to your account.")),
+        PromptMessage(role="assistant", content=TextContent(type="text", text=f"Let me do that for you. I'll use your account number {account}, connect to the {server} server, and log in.")),
+        PromptMessage(role="user", content=TextContent(type="text", text="Great, please proceed with the connection.")),
     ]
 
 @mcp.prompt()

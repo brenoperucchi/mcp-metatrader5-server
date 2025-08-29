@@ -1,0 +1,4 @@
+[16:44:28] http INFO  mcp-run_http_mcp: Logging initialized for run_http_mcp (event=logging_initialized)
+[SIGNAL] Received signal 15, shutting down...
+[CLEANUP] Error during cleanup: cannot import name 'config_manager' from partially initialized module 'mcp_metatrader5_server.server' (most likely due to a circular import) (/mnt/c/Users/Breno Perucchi/Devs/mcp-metatrader5-server/src/mcp_metatrader5_server/server.py)
+[CLEANUP] Error during cleanup: partially initialized module 'pandas' from '/mnt/c/Users/Breno Perucchi/Devs/mcp-metatrader5-server/venv/lib/python3.13/site-packages/pandas/__init__.py' has no attribute '_pandas_datetime_CAPI' (most likely due to a circular import)

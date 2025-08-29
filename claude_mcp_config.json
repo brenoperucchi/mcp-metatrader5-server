@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "mt5": {
+      "command": "python",
+      "args": [
+        "-u",
+        "C:\\Users\\Breno Perucchi\\Devs\\mcp-metatrader5-server\\fork_mcp\\run_fork_mcp.py"
+      ],
+      "cwd": "C:\\Users\\Breno Perucchi\\Devs\\mcp-metatrader5-server\\fork_mcp",
+      "env": {
+        "PYTHONUNBUFFERED": "1",
+        "MCP_LOG_LEVEL": "INFO",
+        "MCPTransport": "stdio"
+      }
+    }
+  }
+}

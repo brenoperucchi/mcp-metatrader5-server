@@ -1,0 +1,62 @@
+{
+  "tool_name": "history_deals_get",
+  "description": "Get deals from history within the specified date range.",
+  "signature": "def history_deals_get(symbol: Optional[str] = None, group: Optional[str] = None, ticket: Optional[int] = None, position: Optional[int] = None, from_date: Optional[datetime] = None, to_date: Optional[datetime] = None)",
+  "parameters": {
+    "symbol": {
+      "name": "symbol",
+      "required": false,
+      "type": "Optional[str]",
+      "default": "None"
+    },
+    "group": {
+      "name": "group",
+      "required": false,
+      "type": "Optional[str]",
+      "default": "None"
+    },
+    "ticket": {
+      "name": "ticket",
+      "required": false,
+      "type": "Optional[int]",
+      "default": "None"
+    },
+    "position": {
+      "name": "position",
+      "required": false,
+      "type": "Optional[int]",
+      "default": "None"
+    },
+    "from_date": {
+      "name": "from_date",
+      "required": false,
+      "type": "Optional[datetime]",
+      "default": "None"
+    },
+    "to_date": {
+      "name": "to_date",
+      "required": false,
+      "type": "Optional[datetime]",
+      "default": "None"
+    }
+  },
+  "return_type": "List[Deal]",
+  "source": "offline_analysis",
+  "timestamp": "2025-08-26T02:32:56.347306",
+  "example_request": {
+    "jsonrpc": "2.0",
+    "id": "example_123",
+    "method": "tools/call",
+    "params": {
+      "name": "history_deals_get",
+      "arguments": {
+        "symbol": "ITSA3",
+        "group": "example_value",
+        "ticket": 123,
+        "position": 123,
+        "from_date": "example",
+        "to_date": "example"
+      }
+    }
+  }
+}
