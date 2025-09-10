@@ -1,0 +1,131 @@
+{
+  "metadata": {
+    "timestamp": "2025-08-28T22:04:18.627610",
+    "server_url": "192.168.0.125:8000",
+    "validation_type": "Contract Compliance E2.1"
+  },
+  "summary": {
+    "total_tests": 9,
+    "passed_tests": 8,
+    "critical_failures": 0,
+    "success_rate": 88.88888888888889,
+    "final_status": "\ud83d\udfe2 APROVADO",
+    "message": "Contratos validados com sucesso"
+  },
+  "detailed_results": {
+    "connection_tools": {
+      "initialize": {
+        "success": true,
+        "latency_ms": 3.4301280975341797,
+        "sla_met": true,
+        "schema_valid": true,
+        "business_rules_ok": true,
+        "critical": true
+      },
+      "get_account_info": {
+        "success": true,
+        "latency_ms": 2.1009445190429688,
+        "sla_met": true,
+        "schema_valid": true,
+        "business_rules_ok": true,
+        "critical": true
+      },
+      "get_terminal_info": {
+        "success": true,
+        "latency_ms": 1.6262531280517578,
+        "sla_met": true,
+        "schema_valid": true,
+        "business_rules_ok": true,
+        "critical": true
+      },
+      "validate_demo_for_trading": {
+        "success": true,
+        "latency_ms": 1.74713134765625,
+        "sla_met": true,
+        "schema_valid": true,
+        "business_rules_ok": true,
+        "critical": true
+      }
+    },
+    "market_data_tools": {
+      "get_symbol_info": {
+        "success": true,
+        "avg_latency_ms": 2.2110939025878906,
+        "sla_met": true,
+        "symbols_tested": {
+          "ITSA3": {
+            "success": true,
+            "latency_ms": 2.216339111328125,
+            "sla_met": true,
+            "data_quality_ok": true
+          },
+          "ITSA4": {
+            "success": true,
+            "latency_ms": 2.2058486938476562,
+            "sla_met": true,
+            "data_quality_ok": true
+          }
+        },
+        "critical": true
+      },
+      "get_symbol_info_tick": {
+        "success": true,
+        "avg_latency_ms": 1.6584396362304688,
+        "sla_met": true,
+        "symbols_tested": {
+          "ITSA3": {
+            "success": true,
+            "latency_ms": 1.641988754272461,
+            "sla_met": true,
+            "data_quality_ok": true
+          },
+          "ITSA4": {
+            "success": true,
+            "latency_ms": 1.6748905181884766,
+            "sla_met": true,
+            "data_quality_ok": true
+          }
+        },
+        "critical": true
+      },
+      "symbol_select": {
+        "success": true,
+        "avg_latency_ms": 1.6570091247558594,
+        "sla_met": true,
+        "symbols_tested": {
+          "ITSA3": {
+            "success": true,
+            "latency_ms": 1.6438961029052734,
+            "sla_met": true,
+            "data_quality_ok": true
+          },
+          "ITSA4": {
+            "success": true,
+            "latency_ms": 1.6701221466064453,
+            "sla_met": true,
+            "data_quality_ok": true
+          }
+        },
+        "critical": true
+      },
+      "copy_book_levels": {
+        "success": false,
+        "latency_ms": 1.4719963073730469,
+        "sla_met": true,
+        "critical": false
+      }
+    },
+    "trading_tools": {
+      "order_check": {
+        "success": true,
+        "latency_ms": 1.851797103881836,
+        "sla_met": true,
+        "critical": true
+      },
+      "order_send": {
+        "success": null,
+        "note": "NOT TESTED - Safety validation only"
+      }
+    }
+  }
+}

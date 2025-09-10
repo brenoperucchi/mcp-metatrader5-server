@@ -1,0 +1,169 @@
+# MCP MT5 Contracts - ETAPA 2 (Simplified)
+# Issue: E2.1 - Especificar contratos MCP necessários à Decisão de Swap
+
+metadata:
+  version: "1.0.0"
+  created: "2025-08-28"
+  server_url: "http://192.168.0.125:8000/mcp"
+  protocol: "JSON-RPC 2.0 + MCP"
+
+# CONNECTION TOOLS
+connection_tools:
+  initialize:
+    method: "tools/call"
+    description: "Initialize MetaTrader 5 terminal"
+    sla_ms: 5000
+    critical_for_etapa2: true
+
+  get_account_info:
+    method: "tools/call"
+    description: "Get current trading account information"
+    sla_ms: 150
+    critical_for_etapa2: true
+    required_fields:
+      - "login"
+      - "trade_mode"
+      - "balance" 
+      - "equity"
+      - "margin_free"
+
+  get_terminal_info:
+    method: "tools/call"
+    description: "Get MetaTrader 5 terminal information"
+    sla_ms: 100
+    critical_for_etapa2: true
+
+  validate_demo_for_trading:
+    method: "tools/call"
+    description: "Validate if account is DEMO"
+    sla_ms: 100
+    critical_for_etapa2: true
+
+# MARKET DATA TOOLS
+market_data_tools:
+  get_symbol_info:
+    method: "tools/call"
+    description: "Get symbol bid/ask/last prices"
+    sla_ms: 50
+    critical_for_etapa2: true
+    test_symbols:
+      - "ITSA3"
+      - "ITSA4"
+    required_fields:
+      - "bid"
+      - "ask"
+      - "last"
+      - "volume"
+
+  get_symbol_info_tick:
+    method: "tools/call" 
+    description: "Get latest tick data"
+    sla_ms: 50
+    critical_for_etapa2: true
+    test_symbols:
+      - "ITSA3"
+      - "ITSA4"
+
+  symbol_select:
+    method: "tools/call"
+    description: "Add symbol to Market Watch"
+    sla_ms: 200
+    critical_for_etapa2: true
+
+  copy_book_levels:
+    method: "tools/call"
+    description: "Get Level 2 market data"
+    sla_ms: 100
+    critical_for_etapa2: false
+
+# TRADING TOOLS
+trading_tools:
+  order_check:
+    method: "tools/call"
+    description: "Validate order before sending"
+    sla_ms: 200
+    critical_for_etapa2: true
+    required_fields:
+      - "balance"
+      - "margin_free"
+
+  order_send:
+    method: "tools/call"
+    description: "Send order to trade server"
+    sla_ms: 500
+    critical_for_etapa2: true
+    safety_note: "DEMO accounts only"
+
+  order_cancel:
+    method: "tools/call"
+    description: "Cancel pending order"
+    sla_ms: 300
+    critical_for_etapa2: true
+
+# POSITION TOOLS
+position_tools:
+  positions_get:
+    method: "tools/call"
+    description: "Get open positions"
+    sla_ms: 100
+    critical_for_etapa2: true
+
+  position_modify:
+    method: "tools/call"
+    description: "Modify SL/TP of position"
+    sla_ms: 300
+    critical_for_etapa2: true
+
+  orders_get:
+    method: "tools/call"
+    description: "Get pending orders"
+    sla_ms: 100
+    critical_for_etapa2: true
+
+# BUSINESS RULES
+business_rules:
+  demo_account_only:
+    description: "All trading must be on DEMO accounts"
+    validation: "trade_mode must equal 0"
+    critical: true
+
+  allowed_symbols:
+    description: "Only B3 stocks allowed"
+    symbols:
+      - "ITSA3"
+      - "ITSA4"
+      - "PETR3"
+      - "PETR4"
+      - "VALE3"
+
+  volume_limits:
+    min_volume: 100
+    max_volume: 10000
+    description: "Volume limits for demo trading"
+
+  spread_validation:
+    max_spread_percent: 5.0
+    description: "Reject quotes with spread > 5%"
+
+# ERROR CODES
+error_codes:
+  success:
+    TRADE_RETCODE_DONE: 10009
+    TRADE_RETCODE_PLACED: 10008
+
+  failures:
+    TRADE_RETCODE_REJECT: 10006
+    TRADE_RETCODE_INVALID: 10013
+    TRADE_RETCODE_NO_MONEY: 10019
+
+  custom_mcp:
+    MCP_ERROR_NOT_DEMO: -1002
+    MCP_ERROR_INVALID_SYMBOL: -1003
+    MCP_ERROR_VOLUME_TOO_LARGE: -1004
+
+# PERFORMANCE TARGETS
+performance_targets:
+  market_data_sla: 50  # ms
+  account_info_sla: 150  # ms
+  trading_sla: 500  # ms
+  positions_sla: 100  # ms

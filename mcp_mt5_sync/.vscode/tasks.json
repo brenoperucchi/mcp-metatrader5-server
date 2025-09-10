@@ -1,0 +1,16 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run Dividend Arbitrage Strategy",
+			"type": "shell",
+			"command": "/Users/brenoperucchi/Devs/stock-dividend/.venv/bin/python",
+			"args": [
+				"src/main.py"
+			],
+			"group": "build",
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	]
+}

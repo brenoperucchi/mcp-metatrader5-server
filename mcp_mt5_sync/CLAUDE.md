@@ -1,0 +1,3 @@
+- NEVER use upstream repository for GitHub actions - ONLY work with user's fork
+- MCP server runs on Windows machine at 192.168.0.125:8000 with MT5 integration
+- Live Trading Engine connects to Windows MCP server for real-time market data

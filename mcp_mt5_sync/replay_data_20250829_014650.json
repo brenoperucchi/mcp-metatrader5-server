@@ -1,0 +1,812 @@
+[
+  {
+    "tick": 1,
+    "timestamp": "2025-08-29T01:46:14.630711",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.5,
+      "ask": 11.51,
+      "last": 11.51,
+      "volume": 4073000,
+      "timestamp": "2025-08-29 01:46:14.630677"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.47,
+      "ask": 11.49,
+      "last": 11.48,
+      "volume": 3993900,
+      "timestamp": "2025-08-29 01:46:14.630679"
+    },
+    "metrics": {
+      "premium_pn": -0.21729682746630666,
+      "spread_total": 0.26132443804252503,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0
+    },
+    "decision": "NO_ACTION"
+  },
+  {
+    "tick": 2,
+    "timestamp": "2025-08-29T01:46:15.631503",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.53,
+      "ask": 11.55,
+      "last": 11.54,
+      "volume": 247100,
+      "timestamp": "2025-08-29 01:46:15.631271"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.49,
+      "ask": 11.5,
+      "last": 11.5,
+      "volume": 3194500,
+      "timestamp": "2025-08-29 01:46:15.631278"
+    },
+    "metrics": {
+      "premium_pn": -0.389948006932393,
+      "spread_total": 0.2604927396423853,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0
+    },
+    "decision": "NO_ACTION"
+  },
+  {
+    "tick": 3,
+    "timestamp": "2025-08-29T01:46:16.633468",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.46,
+      "ask": 11.48,
+      "last": 11.47,
+      "volume": 1628300,
+      "timestamp": "2025-08-29 01:46:16.633238"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.52,
+      "ask": 11.54,
+      "last": 11.53,
+      "volume": 4703200,
+      "timestamp": "2025-08-29 01:46:16.633244"
+    },
+    "metrics": {
+      "premium_pn": 0.5231037489101894,
+      "spread_total": 0.34813118091913164,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0.17497256799105776
+    },
+    "decision": "NO_ACTION"
+  },
+  {
+    "tick": 4,
+    "timestamp": "2025-08-29T01:46:17.634925",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.48,
+      "ask": 11.49,
+      "last": 11.48,
+      "volume": 2987400,
+      "timestamp": "2025-08-29 01:46:17.634655"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.47,
+      "ask": 11.48,
+      "last": 11.47,
+      "volume": 4970300,
+      "timestamp": "2025-08-29 01:46:17.634677"
+    },
+    "metrics": {
+      "premium_pn": -0.08707009142357867,
+      "spread_total": 0.1742919720889786,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0
+    },
+    "decision": "NO_ACTION"
+  },
+  {
+    "tick": 5,
+    "timestamp": "2025-08-29T01:46:18.636335",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.48,
+      "ask": 11.5,
+      "last": 11.49,
+      "volume": 3234900,
+      "timestamp": "2025-08-29 01:46:18.636252"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.51,
+      "ask": 11.52,
+      "last": 11.52,
+      "volume": 2664400,
+      "timestamp": "2025-08-29 01:46:18.636254"
+    },
+    "metrics": {
+      "premium_pn": 0.21758050478677418,
+      "spread_total": 0.2610970009414572,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0
+    },
+    "decision": "NO_ACTION"
+  },
+  {
+    "tick": 6,
+    "timestamp": "2025-08-29T01:46:19.637160",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.52,
+      "ask": 11.54,
+      "last": 11.53,
+      "volume": 3628200,
+      "timestamp": "2025-08-29 01:46:19.637078"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.5,
+      "ask": 11.52,
+      "last": 11.5,
+      "volume": 2143300,
+      "timestamp": "2025-08-29 01:46:19.637079"
+    },
+    "metrics": {
+      "premium_pn": -0.17346053772766326,
+      "spread_total": 0.3475241545893646,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0
+    },
+    "decision": "NO_ACTION"
+  },
+  {
+    "tick": 7,
+    "timestamp": "2025-08-29T01:46:20.638092",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.53,
+      "ask": 11.54,
+      "last": 11.53,
+      "volume": 4604000,
+      "timestamp": "2025-08-29 01:46:20.638004"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.48,
+      "ask": 11.49,
+      "last": 11.49,
+      "volume": 136100,
+      "timestamp": "2025-08-29 01:46:20.638006"
+    },
+    "metrics": {
+      "premium_pn": -0.433463372345043,
+      "spread_total": 0.173838282801112,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0
+    },
+    "decision": "NO_ACTION"
+  },
+  {
+    "tick": 8,
+    "timestamp": "2025-08-29T01:46:21.638488",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.46,
+      "ask": 11.47,
+      "last": 11.46,
+      "volume": 4784500,
+      "timestamp": "2025-08-29 01:46:21.638405"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.5,
+      "ask": 11.52,
+      "last": 11.51,
+      "volume": 1882700,
+      "timestamp": "2025-08-29 01:46:21.638407"
+    },
+    "metrics": {
+      "premium_pn": 0.39249890972525014,
+      "spread_total": 0.2611730783822693,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0.13132583134298087
+    },
+    "decision": "SWAP_TO_PN"
+  },
+  {
+    "tick": 9,
+    "timestamp": "2025-08-29T01:46:22.639839",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.45,
+      "ask": 11.47,
+      "last": 11.45,
+      "volume": 1175000,
+      "timestamp": "2025-08-29 01:46:22.639753"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.48,
+      "ask": 11.49,
+      "last": 11.48,
+      "volume": 1077500,
+      "timestamp": "2025-08-29 01:46:22.639754"
+    },
+    "metrics": {
+      "premium_pn": 0.2181500872600225,
+      "spread_total": 0.26178050302026157,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0
+    },
+    "decision": "SWAP_TO_PN"
+  },
+  {
+    "tick": 10,
+    "timestamp": "2025-08-29T01:46:23.641169",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.47,
+      "ask": 11.48,
+      "last": 11.48,
+      "volume": 1599600,
+      "timestamp": "2025-08-29 01:46:23.641088"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.51,
+      "ask": 11.53,
+      "last": 11.52,
+      "volume": 4060100,
+      "timestamp": "2025-08-29 01:46:23.641090"
+    },
+    "metrics": {
+      "premium_pn": 0.3921568627450819,
+      "spread_total": 0.26094590428549125,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0.13121095845959063
+    },
+    "decision": "SWAP_TO_PN"
+  },
+  {
+    "tick": 1,
+    "timestamp": "2025-08-29T01:46:26.642744",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.45,
+      "ask": 11.46,
+      "last": 11.46,
+      "volume": 220400,
+      "timestamp": "2025-08-29 01:46:26.642621"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.5,
+      "ask": 11.52,
+      "last": 11.51,
+      "volume": 1414600,
+      "timestamp": "2025-08-29 01:46:26.642626"
+    },
+    "metrics": {
+      "premium_pn": 0.4801396769969421,
+      "spread_total": 0.26124928801975555,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0.21889038897718655
+    },
+    "decision": "NO_ACTION"
+  },
+  {
+    "tick": 2,
+    "timestamp": "2025-08-29T01:46:27.643393",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.44,
+      "ask": 11.46,
+      "last": 11.46,
+      "volume": 2840600,
+      "timestamp": "2025-08-29 01:46:27.643313"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.49,
+      "ask": 11.51,
+      "last": 11.49,
+      "volume": 4751900,
+      "timestamp": "2025-08-29 01:46:27.643314"
+    },
+    "metrics": {
+      "premium_pn": 0.4366812227074298,
+      "spread_total": 0.3488895786545998,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0.08779164405283002
+    },
+    "decision": "NO_ACTION"
+  },
+  {
+    "tick": 3,
+    "timestamp": "2025-08-29T01:46:28.645167",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.53,
+      "ask": 11.55,
+      "last": 11.53,
+      "volume": 1554600,
+      "timestamp": "2025-08-29 01:46:28.644934"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.49,
+      "ask": 11.5,
+      "last": 11.49,
+      "volume": 2515700,
+      "timestamp": "2025-08-29 01:46:28.644940"
+    },
+    "metrics": {
+      "premium_pn": -0.389948006932393,
+      "spread_total": 0.2604927396423853,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0
+    },
+    "decision": "NO_ACTION"
+  },
+  {
+    "tick": 4,
+    "timestamp": "2025-08-29T01:46:29.645669",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.54,
+      "ask": 11.56,
+      "last": 11.55,
+      "volume": 1449700,
+      "timestamp": "2025-08-29 01:46:29.645590"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.47,
+      "ask": 11.48,
+      "last": 11.48,
+      "volume": 1494300,
+      "timestamp": "2025-08-29 01:46:29.645591"
+    },
+    "metrics": {
+      "premium_pn": -0.6493506493506431,
+      "spread_total": 0.26049418345500286,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0
+    },
+    "decision": "NO_ACTION"
+  },
+  {
+    "tick": 5,
+    "timestamp": "2025-08-29T01:46:30.646384",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.53,
+      "ask": 11.54,
+      "last": 11.54,
+      "volume": 3650100,
+      "timestamp": "2025-08-29 01:46:30.646304"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.51,
+      "ask": 11.53,
+      "last": 11.52,
+      "volume": 4682900,
+      "timestamp": "2025-08-29 01:46:30.646305"
+    },
+    "metrics": {
+      "premium_pn": -0.13003901170351598,
+      "spread_total": 0.26049221499762465,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0
+    },
+    "decision": "NO_ACTION"
+  },
+  {
+    "tick": 6,
+    "timestamp": "2025-08-29T01:46:31.647418",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.45,
+      "ask": 11.47,
+      "last": 11.46,
+      "volume": 1884000,
+      "timestamp": "2025-08-29 01:46:31.647328"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.48,
+      "ask": 11.49,
+      "last": 11.49,
+      "volume": 1573600,
+      "timestamp": "2025-08-29 01:46:31.647329"
+    },
+    "metrics": {
+      "premium_pn": 0.2181500872600225,
+      "spread_total": 0.26178050302026157,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0
+    },
+    "decision": "SWAP_TO_PN"
+  },
+  {
+    "tick": 7,
+    "timestamp": "2025-08-29T01:46:32.648622",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.53,
+      "ask": 11.54,
+      "last": 11.54,
+      "volume": 1189600,
+      "timestamp": "2025-08-29 01:46:32.648537"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.49,
+      "ask": 11.5,
+      "last": 11.49,
+      "volume": 1553700,
+      "timestamp": "2025-08-29 01:46:32.648538"
+    },
+    "metrics": {
+      "premium_pn": -0.3467706978760221,
+      "spread_total": 0.17376247077853824,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0
+    },
+    "decision": "NO_ACTION"
+  },
+  {
+    "tick": 8,
+    "timestamp": "2025-08-29T01:46:33.649969",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.54,
+      "ask": 11.55,
+      "last": 11.54,
+      "volume": 1591400,
+      "timestamp": "2025-08-29 01:46:33.649893"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.49,
+      "ask": 11.5,
+      "last": 11.5,
+      "volume": 580700,
+      "timestamp": "2025-08-29 01:46:33.649894"
+    },
+    "metrics": {
+      "premium_pn": -0.4330879168471107,
+      "spread_total": 0.1736873145663666,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0
+    },
+    "decision": "NO_ACTION"
+  },
+  {
+    "tick": 9,
+    "timestamp": "2025-08-29T01:46:34.650404",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.47,
+      "ask": 11.49,
+      "last": 11.48,
+      "volume": 4471800,
+      "timestamp": "2025-08-29 01:46:34.650309"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.49,
+      "ask": 11.51,
+      "last": 11.49,
+      "volume": 3461000,
+      "timestamp": "2025-08-29 01:46:34.650310"
+    },
+    "metrics": {
+      "premium_pn": 0.17421602787456072,
+      "spread_total": 0.34843232013280967,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0
+    },
+    "decision": "SWAP_TO_PN"
+  },
+  {
+    "tick": 10,
+    "timestamp": "2025-08-29T01:46:35.652022",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.53,
+      "ask": 11.55,
+      "last": 11.54,
+      "volume": 2373200,
+      "timestamp": "2025-08-29 01:46:35.651744"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.51,
+      "ask": 11.53,
+      "last": 11.53,
+      "volume": 3027000,
+      "timestamp": "2025-08-29 01:46:35.651767"
+    },
+    "metrics": {
+      "premium_pn": -0.1733102253032892,
+      "spread_total": 0.3472224838614717,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0
+    },
+    "decision": "NO_ACTION"
+  },
+  {
+    "tick": 1,
+    "timestamp": "2025-08-29T01:46:38.653394",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.54,
+      "ask": 11.55,
+      "last": 11.54,
+      "volume": 731600,
+      "timestamp": "2025-08-29 01:46:38.653340"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.5,
+      "ask": 11.52,
+      "last": 11.51,
+      "volume": 529500,
+      "timestamp": "2025-08-29 01:46:38.653342"
+    },
+    "metrics": {
+      "premium_pn": -0.3031615417929852,
+      "spread_total": 0.2605681561299172,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0
+    },
+    "decision": "NO_ACTION"
+  },
+  {
+    "tick": 2,
+    "timestamp": "2025-08-29T01:46:39.654102",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.49,
+      "ask": 11.51,
+      "last": 11.51,
+      "volume": 2027700,
+      "timestamp": "2025-08-29 01:46:39.653880"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.48,
+      "ask": 11.49,
+      "last": 11.49,
+      "volume": 2094800,
+      "timestamp": "2025-08-29 01:46:39.653885"
+    },
+    "metrics": {
+      "premium_pn": -0.1304347826087006,
+      "spread_total": 0.26117241776669353,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0
+    },
+    "decision": "NO_ACTION"
+  },
+  {
+    "tick": 3,
+    "timestamp": "2025-08-29T01:46:40.655681",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.51,
+      "ask": 11.52,
+      "last": 11.52,
+      "volume": 3048500,
+      "timestamp": "2025-08-29 01:46:40.655511"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.5,
+      "ask": 11.51,
+      "last": 11.5,
+      "volume": 3152800,
+      "timestamp": "2025-08-29 01:46:40.655516"
+    },
+    "metrics": {
+      "premium_pn": -0.08684324793748643,
+      "spread_total": 0.1738374948060251,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0
+    },
+    "decision": "NO_ACTION"
+  },
+  {
+    "tick": 4,
+    "timestamp": "2025-08-29T01:46:41.656268",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.47,
+      "ask": 11.49,
+      "last": 11.48,
+      "volume": 2883600,
+      "timestamp": "2025-08-29 01:46:41.656183"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.48,
+      "ask": 11.49,
+      "last": 11.48,
+      "volume": 3700300,
+      "timestamp": "2025-08-29 01:46:41.656184"
+    },
+    "metrics": {
+      "premium_pn": 0.043554006968632444,
+      "spread_total": 0.26147593024067683,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0
+    },
+    "decision": "NO_ACTION"
+  },
+  {
+    "tick": 5,
+    "timestamp": "2025-08-29T01:46:42.657194",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.52,
+      "ask": 11.54,
+      "last": 11.53,
+      "volume": 3613900,
+      "timestamp": "2025-08-29 01:46:42.657114"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.51,
+      "ask": 11.53,
+      "last": 11.52,
+      "volume": 4187400,
+      "timestamp": "2025-08-29 01:46:42.657116"
+    },
+    "metrics": {
+      "premium_pn": -0.08673026886383163,
+      "spread_total": 0.3473730572449004,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0
+    },
+    "decision": "NO_ACTION"
+  },
+  {
+    "tick": 6,
+    "timestamp": "2025-08-29T01:46:43.657742",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.53,
+      "ask": 11.55,
+      "last": 11.54,
+      "volume": 2839700,
+      "timestamp": "2025-08-29 01:46:43.657659"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.47,
+      "ask": 11.48,
+      "last": 11.47,
+      "volume": 4564300,
+      "timestamp": "2025-08-29 01:46:43.657660"
+    },
+    "metrics": {
+      "premium_pn": -0.5632582322356823,
+      "spread_total": 0.26064449587937694,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0
+    },
+    "decision": "NO_ACTION"
+  },
+  {
+    "tick": 7,
+    "timestamp": "2025-08-29T01:46:44.658446",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.5,
+      "ask": 11.52,
+      "last": 11.51,
+      "volume": 1015900,
+      "timestamp": "2025-08-29 01:46:44.658365"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.49,
+      "ask": 11.5,
+      "last": 11.49,
+      "volume": 3395600,
+      "timestamp": "2025-08-29 01:46:44.658367"
+    },
+    "metrics": {
+      "premium_pn": -0.13032145960033703,
+      "spread_total": 0.26094524539296376,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0
+    },
+    "decision": "NO_ACTION"
+  },
+  {
+    "tick": 8,
+    "timestamp": "2025-08-29T01:46:45.659777",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.46,
+      "ask": 11.48,
+      "last": 11.47,
+      "volume": 3520500,
+      "timestamp": "2025-08-29 01:46:45.659542"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.5,
+      "ask": 11.51,
+      "last": 11.5,
+      "volume": 3126100,
+      "timestamp": "2025-08-29 01:46:45.659547"
+    },
+    "metrics": {
+      "premium_pn": 0.30514385353093604,
+      "spread_total": 0.2614765915471528,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0.043667261983783234
+    },
+    "decision": "SWAP_TO_PN"
+  },
+  {
+    "tick": 9,
+    "timestamp": "2025-08-29T01:46:46.660216",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.53,
+      "ask": 11.54,
+      "last": 11.54,
+      "volume": 267100,
+      "timestamp": "2025-08-29 01:46:46.660134"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.48,
+      "ask": 11.5,
+      "last": 11.5,
+      "volume": 1124200,
+      "timestamp": "2025-08-29 01:46:46.660136"
+    },
+    "metrics": {
+      "premium_pn": -0.39011703511053253,
+      "spread_total": 0.26094629673839237,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0
+    },
+    "decision": "NO_ACTION"
+  },
+  {
+    "tick": 10,
+    "timestamp": "2025-08-29T01:46:47.661394",
+    "on_quote": {
+      "symbol": "ITSA3",
+      "bid": 11.52,
+      "ask": 11.54,
+      "last": 11.54,
+      "volume": 2985600,
+      "timestamp": "2025-08-29 01:46:47.661167"
+    },
+    "pn_quote": {
+      "symbol": "ITSA4",
+      "bid": 11.49,
+      "ask": 11.51,
+      "last": 11.5,
+      "volume": 4239000,
+      "timestamp": "2025-08-29 01:46:47.661175"
+    },
+    "metrics": {
+      "premium_pn": -0.2601908065914949,
+      "spread_total": 0.3476755149405206,
+      "arbitrage_opportunity": false,
+      "expected_profit": 0
+    },
+    "decision": "NO_ACTION"
+  }
+]

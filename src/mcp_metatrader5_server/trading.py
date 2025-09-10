@@ -7,9 +7,18 @@ This module contains tools and resources for trading operations in MetaTrader 5.
 import logging
 from typing import Dict, List, Optional, Union, Any, Tuple
 from datetime import datetime
+import os
 
-# Force mock for validation testing  
-from . import mt5_mock as mt5
+# Import MT5 based on USE_MOCK environment variable
+USE_MOCK = os.environ.get('USE_MOCK', 'false').lower() in ['true', '1', 'yes']
+
+if USE_MOCK:
+    from . import mt5_mock as mt5
+else:
+    try:
+        import MetaTrader5 as mt5
+    except ImportError:
+        from . import mt5_mock as mt5
 import pandas as pd
 import numpy as np
 from fastmcp import FastMCP

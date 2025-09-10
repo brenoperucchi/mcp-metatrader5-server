@@ -1,0 +1,362 @@
+{
+  "analysis_metadata": {
+    "timestamp": "2025-08-29T13:32:00Z",
+    "server_version": "MetaTrader 5 MCP Server V2",
+    "protocol_version": "2024-11-05",
+    "audit_status": "APPROVED - 100% (6/6 criteria)",
+    "total_tools": 41,
+    "server_url": "http://192.168.0.125:8000/mcp"
+  },
+  "tools": [
+    {
+      "name": "order_send",
+      "category": "trading",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "request": {
+            "type": "object",
+            "required": true,
+            "description": "OrderRequest object with order parameters",
+            "properties": {
+              "action": {
+                "type": "string", 
+                "enum": ["TRADE_ACTION_DEAL", "TRADE_ACTION_PENDING", "TRADE_ACTION_SLTP", "TRADE_ACTION_MODIFY", "TRADE_ACTION_REMOVE"],
+                "description": "Type of trading action to perform"
+              },
+              "symbol": {
+                "type": "string", 
+                "description": "Symbol name (e.g., PETR4, ITSA3, ITSA4)",
+                "examples": ["ITSA3", "ITSA4", "PETR4", "VALE3"]
+              },
+              "volume": {
+                "type": "number", 
+                "description": "Order volume in lots (for B3 stocks, 1 lot = 100 shares)",
+                "minimum": 1
+              },
+              "type": {
+                "type": "string", 
+                "enum": ["ORDER_TYPE_BUY", "ORDER_TYPE_SELL", "ORDER_TYPE_BUY_LIMIT", "ORDER_TYPE_SELL_LIMIT", "ORDER_TYPE_BUY_STOP", "ORDER_TYPE_SELL_STOP"],
+                "description": "Order type"
+              },
+              "price": {
+                "type": "number", 
+                "description": "Order price (required for pending orders)"
+              },
+              "sl": {
+                "type": "number", 
+                "description": "Stop Loss price", 
+                "optional": true
+              },
+              "tp": {
+                "type": "number", 
+                "description": "Take Profit price", 
+                "optional": true
+              },
+              "deviation": {
+                "type": "number", 
+                "description": "Maximum price deviation in points",
+                "default": 20
+              },
+              "magic": {
+                "type": "number", 
+                "description": "Magic number for order identification",
+                "default": 123456
+              },
+              "comment": {
+                "type": "string", 
+                "description": "Order comment", 
+                "optional": true,
+                "maxLength": 64
+              },
+              "type_time": {
+                "type": "string", 
+                "enum": ["ORDER_TIME_GTC", "ORDER_TIME_DAY", "ORDER_TIME_SPECIFIED"],
+                "description": "Order time type",
+                "default": "ORDER_TIME_GTC"
+              },
+              "type_filling": {
+                "type": "string", 
+                "enum": ["ORDER_FILLING_IOC", "ORDER_FILLING_FOK", "ORDER_FILLING_RETURN"],
+                "description": "Order filling policy",
+                "default": "ORDER_FILLING_IOC"
+              }
+            }
+          }
+        },
+        "required": ["request"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "object",
+            "properties": {
+              "retcode": {"type": "number", "description": "Operation result code"},
+              "deal": {"type": "number", "description": "Deal ticket if executed"},
+              "order": {"type": "number", "description": "Order ticket"},
+              "volume": {"type": "number", "description": "Executed volume"},
+              "price": {"type": "number", "description": "Execution price"},
+              "bid": {"type": "number", "description": "Current bid price"},
+              "ask": {"type": "number", "description": "Current ask price"},
+              "comment": {"type": "string", "description": "Broker comment"},
+              "request_id": {"type": "number", "description": "Request identifier"}
+            }
+          }
+        }
+      },
+      "errors": [
+        {"code": "TRADE_RETCODE_REQUOTE", "description": "Requote - price changed"},
+        {"code": "TRADE_RETCODE_REJECT", "description": "Request rejected by broker"},
+        {"code": "TRADE_RETCODE_CANCEL", "description": "Request canceled by timeout"},
+        {"code": "TRADE_RETCODE_PLACED", "description": "Order placed successfully"},
+        {"code": "TRADE_RETCODE_DONE", "description": "Request completed"}, 
+        {"code": "TRADE_RETCODE_DONE_PARTIAL", "description": "Only partial execution"},
+        {"code": "TRADE_RETCODE_ERROR", "description": "Common error"},
+        {"code": "TRADE_RETCODE_TIMEOUT", "description": "Request timeout"},
+        {"code": "TRADE_RETCODE_INVALID", "description": "Invalid request"},
+        {"code": "TRADE_RETCODE_INVALID_VOLUME", "description": "Invalid volume in request"},
+        {"code": "TRADE_RETCODE_INVALID_PRICE", "description": "Invalid price in request"},
+        {"code": "TRADE_RETCODE_INVALID_STOPS", "description": "Invalid stops in request"},
+        {"code": "TRADE_RETCODE_TRADE_DISABLED", "description": "Trade is disabled"},
+        {"code": "TRADE_RETCODE_MARKET_CLOSED", "description": "Market is closed"},
+        {"code": "TRADE_RETCODE_NO_MONEY", "description": "There is not enough money to complete the request"},
+        {"code": "TRADE_RETCODE_PRICE_CHANGED", "description": "Price changed"},
+        {"code": "TRADE_RETCODE_PRICE_OFF", "description": "There are no quotes to process the request"},
+        {"code": "TRADE_RETCODE_INVALID_EXPIRATION", "description": "Invalid order expiration date"},
+        {"code": "TRADE_RETCODE_ORDER_CHANGED", "description": "Order state changed"},
+        {"code": "TRADE_RETCODE_TOO_MANY_REQUESTS", "description": "Too frequent requests"},
+        {"code": "TRADE_RETCODE_NO_CHANGES", "description": "No changes in request"},
+        {"code": "TRADE_RETCODE_SERVER_DISABLES_AT", "description": "Auto trading disabled by server"},
+        {"code": "TRADE_RETCODE_CLIENT_DISABLES_AT", "description": "Auto trading disabled by client terminal"}
+      ],
+      "supports_idempotency": false,
+      "performance": {
+        "avg_latency_ms": 3,
+        "sla_limit_ms": 200,
+        "violations": 0
+      },
+      "sample_payload": {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "tools/call",
+        "params": {
+          "name": "order_send",
+          "arguments": {
+            "request": {
+              "action": "TRADE_ACTION_DEAL",
+              "symbol": "PETR4",
+              "volume": 100,
+              "type": "ORDER_TYPE_BUY",
+              "price": 38.50,
+              "deviation": 20,
+              "magic": 123456,
+              "comment": "Test order via MCP",
+              "type_time": "ORDER_TIME_GTC",
+              "type_filling": "ORDER_FILLING_IOC"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "order_cancel",
+      "category": "trading",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ticket": {
+            "type": "number",
+            "required": true,
+            "description": "Order ticket number to cancel",
+            "minimum": 1
+          }
+        },
+        "required": ["ticket"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "object",
+            "properties": {
+              "retcode": {"type": "number", "description": "Operation result code"},
+              "comment": {"type": "string", "description": "Operation comment"},
+              "success": {"type": "boolean", "description": "Operation success status"}
+            }
+          }
+        }
+      },
+      "errors": [
+        {"code": "TRADE_RETCODE_DONE", "description": "Order successfully canceled"},
+        {"code": "TRADE_RETCODE_INVALID", "description": "Invalid ticket number"},
+        {"code": "TRADE_RETCODE_INVALID_ORDER", "description": "Order not found"},
+        {"code": "TRADE_RETCODE_ORDER_CHANGED", "description": "Order already processed/executed"},
+        {"code": "TRADE_RETCODE_TRADE_DISABLED", "description": "Trading disabled"},
+        {"code": "TRADE_RETCODE_MARKET_CLOSED", "description": "Market is closed"}
+      ],
+      "supports_idempotency": false,
+      "performance": {
+        "avg_latency_ms": 2,
+        "sla_limit_ms": 150,
+        "violations": 0
+      },
+      "sample_payload": {
+        "jsonrpc": "2.0",
+        "id": 2,
+        "method": "tools/call",
+        "params": {
+          "name": "order_cancel",
+          "arguments": {
+            "ticket": 123456789
+          }
+        }
+      }
+    }
+  ],
+  "resources": [
+    {
+      "name": "Getting Started Guide",
+      "uri": "mt5://getting_started",
+      "description": "Complete guide on how to get started with the MetaTrader 5 API",
+      "mimeType": "text/markdown",
+      "content_summary": "41 total tools: 14 Server tools, 16 Market data tools, 11 Trading tools"
+    },
+    {
+      "name": "Trading Guide", 
+      "uri": "mt5://trading_guide",
+      "description": "Comprehensive guide for trading with the MetaTrader 5 API",
+      "mimeType": "text/markdown",
+      "content_summary": "11 available trading tools including order management and position handling"
+    },
+    {
+      "name": "Market Data Guide",
+      "uri": "mt5://market_data_guide", 
+      "description": "Guide for accessing and analyzing market data with the MetaTrader 5 API",
+      "mimeType": "text/markdown",
+      "content_summary": "16 market data tools for symbols, rates, ticks, and order book data"
+    }
+  ],
+  "all_tools_summary": {
+    "total_tools": 41,
+    "categories": {
+      "server_tools": {
+        "count": 14,
+        "tools": ["initialize", "shutdown", "login", "get_account_info", "get_terminal_info", "get_version", "validate_demo_for_trading", "get_available_configs", "get_current_config", "switch_config", "ping", "health", "transport_info", "connection_status"]
+      },
+      "market_data_tools": {
+        "count": 16,
+        "tools": ["get_symbols", "get_symbols_by_group", "get_symbol_info", "get_symbol_info_tick", "symbol_select", "copy_rates_from_pos", "copy_rates_from_date", "copy_rates_range", "copy_ticks_from_pos", "copy_ticks_from_date", "copy_ticks_range", "get_last_error", "copy_book_levels", "subscribe_market_book", "unsubscribe_market_book", "get_book_snapshot"]
+      },
+      "trading_tools": {
+        "count": 11,
+        "tools": ["order_send", "order_check", "order_cancel", "order_modify", "position_modify", "positions_get", "positions_get_by_ticket", "orders_get", "orders_get_by_ticket", "history_orders_get", "history_deals_get"]
+      }
+    }
+  },
+  "b3_symbols_status": {
+    "itsa3": {
+      "accessible": true,
+      "bid": 30.87,
+      "ask": 30.89,
+      "last": 30.88,
+      "spread": 0.020,
+      "spread_percent": 0.06,
+      "volume": 7499,
+      "latency_ms": 2.1
+    },
+    "itsa4": {
+      "accessible": true,
+      "bid": 31.04,
+      "ask": 31.06,
+      "last": 31.05,
+      "spread": 0.020,
+      "spread_percent": 0.06,
+      "volume": 4366,
+      "latency_ms": 2.0
+    },
+    "arbitrage_analysis": {
+      "itsa3_mid": 30.880,
+      "itsa4_mid": 31.050,
+      "premium_pn": 0.170,
+      "premium_percent": 0.55,
+      "status": "NEUTRAL - Premium moderado"
+    }
+  },
+  "performance_benchmarks": {
+    "get_symbol_info": {
+      "avg_latency_ms": 2.0,
+      "p95_latency_ms": 2.1,
+      "sla_limit_ms": 50,
+      "violations": 0,
+      "status": "PASS"
+    },
+    "get_symbol_info_tick": {
+      "avg_latency_ms": 1.4,
+      "p95_latency_ms": 1.5,
+      "sla_limit_ms": 50,
+      "violations": 0,
+      "status": "PASS"
+    },
+    "get_account_info": {
+      "avg_latency_ms": 1.6,
+      "p95_latency_ms": 2.1,
+      "sla_limit_ms": 150,
+      "violations": 0,
+      "status": "PASS"
+    }
+  },
+  "audit_results": {
+    "simple_audit": {
+      "status": "gaps_minor",
+      "tools_listed": 41,
+      "direct_methods_failed": 4,
+      "symbols_inaccessible": 0,
+      "recommendations": [
+        "Implementar suporte adequado ao protocolo MCP (tools/call)",
+        "Configurar símbolos B3 no MT5 e verificar Market Watch",
+        "Corrigir servidor para implementar padrão MCP completo"
+      ]
+    },
+    "enhanced_audit": {
+      "status": "APPROVED",
+      "score": "6/6 (100%)",
+      "criteria_passed": [
+        "Tools Call Working",
+        "Account Info Working", 
+        "ITSA3 Accessible",
+        "ITSA4 Accessible",
+        "Performance Acceptable",
+        "Arbitrage Viable"
+      ],
+      "ready_for_etapa2": true
+    }
+  },
+  "supports_dividends": false,
+  "dividend_analysis": {
+    "native_support": false,
+    "mt5_limitation": "MetaTrader 5 focuses on real-time pricing, orders, positions and trading history",
+    "required_integration": "External data sources needed for dividend and corporate events data",
+    "recommended_sources": [
+      "Alpha Vantage API",
+      "Yahoo Finance API", 
+      "Bloomberg/Refinitiv Terminal",
+      "B3 Corporate Events API",
+      "Brazilian market data providers (Economatica, etc.)"
+    ],
+    "current_capabilities": [
+      "Real-time execution of orders",
+      "Position management", 
+      "Real-time market data",
+      "Transaction history",
+      "Symbol information and quotes"
+    ]
+  },
+  "notes": "✅ SERVIDOR MCP MT5 APROVADO: O servidor passou na auditoria aprimorada com 100% (6/6 critérios). Todas as funcionalidades de trading estão operacionais, incluindo acesso aos símbolos ITSA3/ITSA4 com latência excelente (<3ms). ❌ DIVIDENDOS: Confirmado que não há suporte nativo para dados de dividendos - seria necessário integrar fonte externa de dados fundamentais. O MetaTrader 5 é especializado em: (1) Execução de ordens em tempo real, (2) Gestão de posições, (3) Dados de mercado tick-by-tick, (4) Histórico de transações, (5) Informações detalhadas de símbolos e cotações. Para dados de dividendos e eventos corporativos, recomenda-se integração com APIs especializadas em dados fundamentais.",
+  "next_steps": [
+    "E2.1 - Especificação de contratos MCP", 
+    "Implementar lógica de decisão de swap",
+    "Configurar monitoramento de arbitragem ITSA3/ITSA4",
+    "Integrar fonte externa de dados de dividendos (opcional)"
+  ]
+}

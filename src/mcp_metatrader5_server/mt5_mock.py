@@ -457,6 +457,10 @@ class MockMT5:
         """Mock symbol select"""
         print(f"🔄 [MOCK] Symbol select: {symbol}, visible={visible}")
         return True
+    
+    def version(self):
+        """Mock version"""
+        return (5, 0, 4000, "01 Jan 1970")  # Mock version tuple
 
 # Instância global do mock
 mt5_mock = MockMT5()
@@ -472,6 +476,7 @@ symbols_get = mt5_mock.symbols_get
 symbol_info = mt5_mock.symbol_info
 symbol_info_tick = mt5_mock.symbol_info_tick
 symbol_select = mt5_mock.symbol_select
+version = mt5_mock.version
 copy_rates_from_pos = mt5_mock.copy_rates_from_pos
 copy_ticks_from_pos = mt5_mock.copy_ticks_from_pos
 positions_get = mt5_mock.positions_get

@@ -26,69 +26,123 @@ sys.path.insert(0, str(src_path))
 from mcp_metatrader5_server.logging_utils import reconfigure_stdio_for_windows
 reconfigure_stdio_for_windows()
 
+# Configuration management
+try:
+    from server_config import server_config
+    CONFIG_AVAILABLE = True
+except ImportError:
+    CONFIG_AVAILABLE = False
 
-def display_mt5_info(logger):
-    """Display MT5 connection information"""
+# Global variable to store current server port
+CURRENT_SERVER_PORT = 8000
+
+def is_verbose_enabled(port=None):
+    """Check if verbose mode is enabled in JSON config"""
+    if port is None:
+        port = CURRENT_SERVER_PORT
+        
+    if not CONFIG_AVAILABLE:
+        return True  # Default to verbose if config not available
+    
+    try:
+        config = server_config.get_server_config(port)
+        return config.get("verbose", False)
+    except:
+        return True  # Default to verbose on error
+
+def set_server_port(port):
+    """Set the global server port for verbose checking"""
+    global CURRENT_SERVER_PORT
+    CURRENT_SERVER_PORT = port
+
+def initialize_mt5_connection(logger):
+    """Initialize MT5 connection with proper configuration
+    
+    Returns:
+        bool: True if MT5 initialized successfully, False otherwise
+    """
+    USE_MOCK = os.environ.get('USE_MOCK', 'false').lower() in ['true', '1', 'yes']
+    
+    if USE_MOCK:
+        logger.info("🔧 Using MOCK mode for development/testing")
+        logger.info("   To use real MT5: unset USE_MOCK or set USE_MOCK=false")
+        return False
+    
     try:
         import MetaTrader5 as mt5
         from mcp_metatrader5_server.mt5_configs import MT5_CONFIGS
         
-        # Try to get MT5 config and initialize
+        # Get configuration
         config_name = os.environ.get('MT5_CONFIG', 'b3')
         config = MT5_CONFIGS.get(config_name, next(iter(MT5_CONFIGS.values())))
         
-        # Initialize MT5
+        logger.info(f"🚀 Initializing MT5: {config_name} ({config.server})")
+        
+        # Initialize MT5 with full configuration
         initialized = False
-        if config.portable:
-            mt5_path = f"{config.mt5_path}\\terminal64.exe"
-            initialized = mt5.initialize(path=mt5_path)
+        if config.portable and hasattr(config, 'mt5_path'):
+            # Don't add terminal64.exe if already in path
+            mt5_path = config.mt5_path if "terminal64.exe" in config.mt5_path else f"{config.mt5_path}\\terminal64.exe"
+            if is_verbose_enabled():
+                logger.info(f"   MT5 Path: {mt5_path}")
+            initialized = mt5.initialize(
+                path=mt5_path,
+                login=config.account,
+                password=config.password,
+                server=config.server,
+                timeout=10000,
+                portable=True
+            )
         else:
-            initialized = mt5.initialize()
+            # Standard initialization
+            initialized = mt5.initialize(
+                login=config.account,
+                password=config.password,
+                server=config.server,
+                timeout=10000
+            )
         
-        if initialized:
-            # Try to login if configured
-            if hasattr(config, 'password') and config.password:
-                mt5.login(config.account, password=config.password, server=config.server)
-            
-            # Get account info
-            account_info = mt5.account_info()
-            terminal_info = mt5.terminal_info()
-            
-            if account_info:
-                logger.info("MT5 Configuration Active:")
-                
-                # Determine market type
-                server_name = account_info.server
-                if "DEMO" in server_name.upper():
-                    if any(x in server_name.upper() for x in ["XP", "B3"]):
-                        market_type = "B3 Stocks (Brazilian Market)"
-                    else:
-                        market_type = "Forex Demo"
-                else:
-                    market_type = "Live Account"
-                
-                logger.info(f"  Market: {market_type}")
-                logger.info(f"  Account: {account_info.login}")
-                logger.info(f"  Server: {account_info.server}")
-                
-                if hasattr(account_info, 'company'):
-                    logger.info(f"  Broker: {account_info.company}")
-                    
-                return True
+        if not initialized:
+            error = mt5.last_error()
+            logger.error(f"❌ MT5 initialization failed: {error}")
+            logger.info("   Falling back to MOCK mode")
+            return False
         
-        # Fallback to config display
-        logger.info("MT5 Configuration (Fallback):")
-        logger.info(f"  Name: {config.name}")
-        logger.info(f"  Account: {config.account}")
-        logger.info(f"  Server: {config.server}")
+        # Verify connection
+        account_info = mt5.account_info()
+        if not account_info:
+            logger.error("❌ Could not get account info after initialization")
+            mt5.shutdown()
+            return False
+        
+        terminal_info = mt5.terminal_info()
+        
+        # Display connection info (compact)
+        logger.info(f"✅ MT5 Connected: {account_info.login}@{account_info.server} | {account_info.balance:.2f} {account_info.currency}")
+        
+        # Only show details if verbose
+        if is_verbose_enabled():
+            if terminal_info:
+                logger.info(f"   Terminal: {terminal_info.name} Build {terminal_info.build}")
+            symbols_total = mt5.symbols_total()
+            logger.info(f"   Symbols: {symbols_total} available")
+        
+        return True
         
     except ImportError:
-        logger.warning("MetaTrader5 library not available (requires Windows)")
-        logger.info("Running in mock mode for development")
+        logger.warning("⚠️ MetaTrader5 library not available")
+        logger.info("   Install with: pip install MetaTrader5")
+        logger.info("   Falling back to MOCK mode")
+        return False
     except Exception as e:
-        logger.warning(f"Error getting MT5 info: {e}")
-    
-    return False
+        logger.error(f"❌ Error initializing MT5: {e}")
+        logger.info("   Falling back to MOCK mode")
+        return False
+
+
+def display_mt5_info(logger):
+    """Legacy function for compatibility - calls initialize_mt5_connection"""
+    return initialize_mt5_connection(logger)
 
 
 def start_mcp_mt5_server(host: str = "0.0.0.0", port: int = 8000):
@@ -130,16 +184,14 @@ def start_mcp_mt5_server(host: str = "0.0.0.0", port: int = 8000):
         server_module.logger = logger
         
         # CRITICAL: Import modules AFTER server is fully loaded to register tools
-        logger.info("Loading market data tools...")
         import mcp_metatrader5_server.market_data  # 16 tools
-        
-        logger.info("Loading trading tools...")  
         import mcp_metatrader5_server.trading      # 11 tools (server.py has 14 tools already)
         
-        logger.info("All modules loaded, checking tool registration... (expecting 41 tools total)")
+        if is_verbose_enabled():
+            logger.info("All modules loaded (41 tools expected)")
         
-        # Display MT5 info
-        display_mt5_info(logger)
+        # Initialize MT5 connection (or use mock if specified)
+        mt5_initialized = initialize_mt5_connection(logger)
         
         # Log configuration
         if config_manager.current_config:
@@ -168,12 +220,32 @@ def start_mcp_mt5_server(host: str = "0.0.0.0", port: int = 8000):
             allow_headers=["*"],
         )
         
-        # Log successful server startup information  
-        logger.info("✅ HTTP MCP Server initialized successfully")
-        logger.info("✅ Manual tool routing active (bypassing FastMCP limitations)")
-        logger.info("✅ All 41 tools available via manual routing")
-        logger.info("✅ POST /mcp endpoint ready for Claude MCP connections")
-        logger.info("✅ Server endpoints: /health /info /mcp /mcp/tools /mcp/status")
+        # Add custom middleware for request logging with timestamp
+        @app.middleware("http")
+        async def log_requests(request: Request, call_next):
+            from datetime import datetime
+            import uuid
+            
+            # Skip logging for non-MCP endpoints
+            if "/mcp" not in request.url.path:
+                return await call_next(request)
+            
+            # Generate unique request ID for debugging
+            request_id = str(uuid.uuid4())[:8]
+            start_time = datetime.now()
+            
+            # Process the request
+            response = await call_next(request)
+            
+            # Log with timestamp and request ID
+            elapsed = (datetime.now() - start_time).total_seconds()
+            timestamp = start_time.strftime("%H:%M:%S")  # Simplified time format
+            logger.info(f"[{timestamp}] {request.client.host} - \"{request.method} {request.url.path}\" {response.status_code} ({elapsed:.3f}s) [{request_id}]")
+            
+            return response
+        
+        # Log successful server startup information (compact)
+        logger.info("✅ MCP Server ready: 41 tools | Endpoints: /health /info /mcp /config")
 
         # Manual tool list (matches our manual tool routing)
         def get_manual_tools_list():
@@ -305,11 +377,13 @@ def start_mcp_mt5_server(host: str = "0.0.0.0", port: int = 8000):
         @app.post("/mcp")
         async def mcp_post(request: Request):
             """MCP POST endpoint - redirect to our manual tool routing"""
-            logger.info("MCP POST request received, processing as manual tool routing")
+            if is_verbose_enabled():
+                logger.info("MCP POST request received, processing as manual tool routing")
             try:
                 # Get the request body
                 body = await request.json()
-                logger.info(f"MCP POST body type: {type(body)}, content: {body}")
+                if is_verbose_enabled():
+                    logger.info(f"MCP POST body type: {type(body)}, content: {body}")
                 
                 # Ensure body is a dictionary
                 if not isinstance(body, dict):
@@ -376,7 +450,8 @@ def start_mcp_mt5_server(host: str = "0.0.0.0", port: int = 8000):
                         import mcp_metatrader5_server.trading as trading_module
                         
                         # Manual tool routing (same as POST /)
-                        logger.info(f"MCP Direct tool call: {tool_name} with args: {tool_args}")
+                        if is_verbose_enabled():
+                            logger.info(f"MCP Direct tool call: {tool_name} with args: {tool_args}")
                         
                         result = None
                         
@@ -400,7 +475,8 @@ def start_mcp_mt5_server(host: str = "0.0.0.0", port: int = 8000):
                                          'copy_ticks_from_date', 'copy_ticks_range', 'get_last_error',
                                          'copy_book_levels', 'subscribe_market_book', 'unsubscribe_market_book',
                                          'get_book_snapshot']:
-                            logger.info(f"MCP Calling market data tool: {tool_name}")
+                            if is_verbose_enabled():
+                                logger.info(f"MCP Calling market data tool: {tool_name}")
                             func = getattr(market_data_module, tool_name, None)
                             if func and hasattr(func, 'fn'):
                                 result = func.fn(**tool_args)
@@ -462,7 +538,8 @@ def start_mcp_mt5_server(host: str = "0.0.0.0", port: int = 8000):
                             })
                         
                         # Handle result serialization
-                        logger.info(f"MCP Tool execution successful, result type: {type(result)}")
+                        if is_verbose_enabled():
+                            logger.info(f"MCP Tool execution successful, result type: {type(result)}")
                         
                         if hasattr(result, 'model_dump'):
                             result_data = result.model_dump()
@@ -798,8 +875,9 @@ Access to 16 market data tools for comprehensive analysis.
                 "mt5_connected": mt5_status != "mock"
             })
         
-        # Get the MCP app and add it as sub-application  
-        mcp_app = mcp.http_app()
+        # Skip MCP app mounting - use only manual routing via POST /mcp
+        # This version of FastMCP doesn't support http_app()
+        mcp_app = None
         
         # CRITICAL: Check tools registration AFTER modules are loaded
         async def check_tools():
@@ -836,11 +914,11 @@ Access to 16 market data tools for comprehensive analysis.
         
         # Debug: Log what endpoints MCP app has
         logger.info(f"MCP app type: {type(mcp_app)}")
-        if hasattr(mcp_app, 'routes'):
+        if mcp_app and hasattr(mcp_app, 'routes'):
             logger.info(f"MCP app routes: {[r.path for r in mcp_app.routes]}")
         
-        # Mount the MCP app (handles MCP protocol at /mcp)
-        app.mount("/mcp", mcp_app)
+        # Skip mounting MCP app - use manual routing only
+        # app.mount("/mcp", mcp_app)
         
         # Add POST redirect for legacy compatibility
         @app.post("/")
@@ -1241,13 +1319,19 @@ Claude CLI: claude add mt5 --transport http --url "http://{host}:{port}/mcp"
         
         logger.info("Server ready")
         
+        # Configure uvicorn logging to suppress duplicate logs
+        import logging as py_logging
+        
+        # Disable uvicorn access logs completely
+        py_logging.getLogger("uvicorn.access").disabled = True
+        
         # Run with uvicorn
         uvicorn.run(
             app,
             host=host,
             port=port,
-            log_level="info",
-            access_log=True
+            log_level="warning",  # Only show warnings and errors
+            access_log=False  # We have custom timestamp logging
         )
         
     except ImportError as e:
@@ -1306,6 +1390,9 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=8000, help="Port to bind to (default: 8000)")
     
     args = parser.parse_args()
+    
+    # Set global server port for verbose checking
+    set_server_port(args.port)
     
     # Register cleanup handlers
     atexit.register(cleanup_handler, args.port)

@@ -24,7 +24,7 @@ MT5_CONFIGS: Dict[str, MT5Config] = {
     "b3": MT5Config(
         name="B3 - Ações Brasileiras", 
         market_type="B3",
-        mt5_path=r"D:\Files\MetaTraders\MT5-Python\MetaTrader XPDEMO 82033102 Ticks",
+        mt5_path=r"D:\Files\MetaTraders\MT5-Python\MetaTrader XPDEMO 82033102 Ticks\terminal64.exe",
         account=72033102,  # Conta demo B3
         server="XPMT5-DEMO",
         portable=True
@@ -32,7 +32,7 @@ MT5_CONFIGS: Dict[str, MT5Config] = {
     "forex": MT5Config(
         name="Forex - Mercado Global",
         market_type="Forex", 
-        mt5_path=r"D:\Files\MetaTraders\MT5-Python\MetaTrader XPDEMO 82033102 Ticks",
+        mt5_path=r"D:\Files\MetaTraders\MT5-Python\MetaTrader XPDEMO 82033102 Ticks\terminal64.exe",
         account=72033102,  # Conta demo Forex
         server="XPMT5-DEMO",
         portable=True

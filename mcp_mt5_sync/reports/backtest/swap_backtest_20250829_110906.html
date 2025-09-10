@@ -1,0 +1,94 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Swap Backtest Report - backtest_20250829_110906</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                h1 { color: #333; }
+                h2 { color: #666; border-bottom: 2px solid #ddd; padding-bottom: 5px; }
+                .metric { display: inline-block; margin: 10px 20px; }
+                .metric-label { font-weight: bold; color: #666; }
+                .metric-value { font-size: 1.2em; }
+                .positive { color: green; }
+                .negative { color: red; }
+                table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #f2f2f2; }
+                .summary-box { background: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0; }
+            </style>
+        </head>
+        <body>
+            <h1>Swap Backtest Report</h1>
+            <div class="summary-box">
+                <h2>Summary</h2>
+                <div class="metric">
+                    <span class="metric-label">Period:</span>
+                    <span class="metric-value">2025-01-01 to 2025-01-05</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Initial Capital:</span>
+                    <span class="metric-value">R$ 100,000.00</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Final Capital:</span>
+                    <span class="metric-value">R$ 67,652.32</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Total Return:</span>
+                    <span class="metric-value negative">
+                        -32.35%
+                    </span>
+                </div>
+            </div>
+            
+            <h2>Performance Metrics</h2>
+            <table>
+                <tr><th>Metric</th><th>Value</th></tr>
+                <tr><td>Total Trades</td><td>7</td></tr>
+                <tr><td>Winning Trades</td><td>3</td></tr>
+                <tr><td>Losing Trades</td><td>4</td></tr>
+                <tr><td>Hit Rate</td><td>42.9%</td></tr>
+                <tr><td>Average Win</td><td>R$ 113.59</td></tr>
+                <tr><td>Average Loss</td><td>R$ -667.64</td></tr>
+                <tr><td>Profit Factor</td><td>0.13</td></tr>
+                <tr><td>Sharpe Ratio</td><td>-4.55</td></tr>
+                <tr><td>Max Drawdown</td><td>31.49%</td></tr>
+            </table>
+            
+            <h2>Swap Metrics</h2>
+            <table>
+                <tr><th>Metric</th><th>Value</th></tr>
+                <tr><td>Total Swaps</td><td>7</td></tr>
+                <tr><td>Successful Swaps</td><td>0</td></tr>
+                <tr><td>Swap Success Rate</td><td>0.0%</td></tr>
+                <tr><td>Avg Premium at Entry</td><td>+1.56%</td></tr>
+                <tr><td>Avg Premium at Swap</td><td>+1.43%</td></tr>
+                <tr><td>Avg Premium at Exit</td><td>+1.62%</td></tr>
+            </table>
+            
+            <h2>MFE/MAE Analysis</h2>
+            <table>
+                <tr><th>Metric</th><th>Value</th></tr>
+                <tr><td>Average MFE</td><td>R$ 1,377.62</td></tr>
+                <tr><td>Average MFE %</td><td>1.72%</td></tr>
+                <tr><td>Average MAE</td><td>R$ -192.96</td></tr>
+                <tr><td>Average MAE %</td><td>-0.23%</td></tr>
+            </table>
+            
+            <h2>Cost Analysis</h2>
+            <table>
+                <tr><th>Cost Type</th><th>Amount</th></tr>
+                <tr><td>Commission</td><td>R$ 684.19</td></tr>
+                <tr><td>Slippage</td><td>R$ 0.93</td></tr>
+                <tr><td>Taxes</td><td>R$ 0.00</td></tr>
+                <tr><td>Total Costs</td><td>R$ 685.13</td></tr>
+            </table>
+            
+            <p style="text-align: center; color: #999; margin-top: 50px;">
+                Generated at 2025-08-29 11:09:06 | 
+                Execution time: 0.00 seconds
+            </p>
+        </body>
+        </html>
+        

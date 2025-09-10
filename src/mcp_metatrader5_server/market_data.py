@@ -7,9 +7,18 @@ This module contains tools and resources for accessing market data from MetaTrad
 import logging
 from typing import Dict, List, Optional, Union, Any, Tuple
 from datetime import datetime
+import os
 
-# Force mock for validation testing
-from . import mt5_mock as mt5
+# Import MT5 based on USE_MOCK environment variable
+USE_MOCK = os.environ.get('USE_MOCK', 'false').lower() in ['true', '1', 'yes']
+
+if USE_MOCK:
+    from . import mt5_mock as mt5
+else:
+    try:
+        import MetaTrader5 as mt5
+    except ImportError:
+        from . import mt5_mock as mt5
 import pandas as pd
 import numpy as np
 from fastmcp import FastMCP
@@ -18,6 +27,24 @@ from pydantic import BaseModel, Field
 
 # Import the main server instance and config manager
 from mcp_metatrader5_server.server import mcp, config_manager
+
+# Configuration management for verbose logging
+def is_verbose_enabled(port=8000):
+    """Check if verbose mode is enabled in JSON config"""
+    try:
+        import sys
+        from pathlib import Path
+        
+        # Add parent directory to path to import server_config
+        parent_dir = Path(__file__).parent.parent.parent
+        if str(parent_dir) not in sys.path:
+            sys.path.insert(0, str(parent_dir))
+        
+        from server_config import server_config
+        config = server_config.get_server_config(port)
+        return config.get("verbose", False)
+    except:
+        return True  # Default to verbose if config not available
 
 logger = logging.getLogger("mt5-mcp-server.market_data")
 
@@ -68,23 +95,32 @@ def get_symbol_info(symbol: str) -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: Information about the symbol.
     """
-    # Auto-initialize if not initialized
+    # Try to use existing connection first, only initialize if absolutely needed
     if not config_manager.initialized:
+        logger.warning("MT5 not initialized, attempting lazy initialization")
         if not config_manager.initialize_mt5():
-            raise ValueError("Failed to initialize MT5")
+            logger.warning("MT5 initialization failed, attempting to use cached data if available")
+            # Don't raise error immediately - try to get symbol data anyway
     
     symbol_info = mt5.symbol_info(symbol)
     if symbol_info is None:
-        logger.error(f"Failed to get info for symbol {symbol}, error code: {mt5.last_error()}")
-        raise ValueError(f"Failed to get info for symbol {symbol}")
+        error_code = mt5.last_error()
+        logger.error(f"Failed to get info for symbol {symbol}, error code: {error_code}")
+        
+        # Try to provide fallback data or at least meaningful error
+        if error_code == (-10003,):  # Market closed error
+            logger.warning(f"Market appears to be closed for {symbol}, but data should still be available")
+        
+        raise ValueError(f"Failed to get info for symbol {symbol} (error: {error_code})")
     
     # Convert named tuple to dictionary
     symbol_dict = symbol_info._asdict()
     
-    # DEBUG: Log original dict from MT5 
-    logger.info(f"ORIGINAL MT5 DICT for {symbol}: 'last' = {symbol_dict.get('last', 'NOT_FOUND')}")
-    logger.info(f"ORIGINAL MT5 DICT keys: {list(symbol_dict.keys())}")
-    logger.info(f"'last' in original dict: {'last' in symbol_dict}")
+    # DEBUG: Log original dict from MT5 (only if verbose enabled)
+    if is_verbose_enabled():
+        logger.info(f"ORIGINAL MT5 DICT for {symbol}: 'last' = {symbol_dict.get('last', 'NOT_FOUND')}")
+        logger.info(f"ORIGINAL MT5 DICT keys: {list(symbol_dict.keys())}")
+        logger.info(f"'last' in original dict: {'last' in symbol_dict}")
     
     # Enrich with tick data to ensure we have the latest 'last' price
     try:
@@ -112,18 +148,20 @@ def get_symbol_info(symbol: str) -> Dict[str, Any]:
                 symbol_dict['spread_value'] = tick.ask - tick.bid
                 symbol_dict['spread_percent'] = ((tick.ask - tick.bid) / tick.bid) * 100 if tick.bid > 0 else 0
                 
-            # Debug log to see what's happening
-            logger.info(f"DEBUG {symbol}: setting last={tick.last}, dict_last={symbol_dict.get('last')}")
-            logger.info(f"DEBUG {symbol}: dict keys: {list(symbol_dict.keys())}")
-            logger.info(f"DEBUG {symbol}: 'last' in dict: {'last' in symbol_dict}")
+            # Debug log to see what's happening (only if verbose enabled)
+            if is_verbose_enabled():
+                logger.info(f"DEBUG {symbol}: setting last={tick.last}, dict_last={symbol_dict.get('last')}")
+                logger.info(f"DEBUG {symbol}: dict keys: {list(symbol_dict.keys())}")
+                logger.info(f"DEBUG {symbol}: 'last' in dict: {'last' in symbol_dict}")
         else:
             logger.warning(f"Could not get tick data for {symbol}, using symbol_info only")
     except Exception as e:
         logger.warning(f"Error getting tick data for {symbol}: {e}, using symbol_info only")
     
-    # Final debug before return
-    logger.info(f"FINAL DEBUG {symbol}: returning dict with keys: {list(symbol_dict.keys())}")
-    logger.info(f"FINAL DEBUG {symbol}: last={symbol_dict.get('last')}, tick_last={symbol_dict.get('tick_last')}")
+    # Final debug before return (only if verbose enabled)
+    if is_verbose_enabled():
+        logger.info(f"FINAL DEBUG {symbol}: returning dict with keys: {list(symbol_dict.keys())}")
+        logger.info(f"FINAL DEBUG {symbol}: last={symbol_dict.get('last')}, tick_last={symbol_dict.get('tick_last')}")
     
     return symbol_dict  # Return dict directly instead of SymbolInfo
 

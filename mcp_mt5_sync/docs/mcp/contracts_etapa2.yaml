@@ -1,0 +1,913 @@
+# MCP MT5 Contracts Specification - ETAPA 2
+# Issue: E2.1 - Especificar contratos MCP necessários à Decisão de Swap
+# Data: 2025-08-28
+# Status: Baseado em auditoria E2.0 bem-sucedida
+
+metadata:
+  version: "1.0.0"
+  created: "2025-08-28T16:45:00Z"
+  server_url: "http://192.168.0.125:8000/mcp"
+  protocol: "JSON-RPC 2.0 + MCP"
+  target_symbols: ["ITSA3", "ITSA4"]
+  
+# =====================================
+# 1. CORE CONNECTION & INFO CONTRACTS
+# =====================================
+
+connection_tools:
+  
+  initialize:
+    method: "tools/call"
+    name: "initialize"
+    description: "Initialize MetaTrader 5 terminal"
+    input_schema:
+      type: "object"
+      properties: {}
+      required: []
+    output_schema:
+      type: "object"
+      properties:
+        content:
+          type: "object"
+          properties:
+            success: { type: "boolean" }
+            message: { type: "string" }
+    sla_ms: 5000
+    critical_for_etapa2: true
+
+  get_account_info:
+    method: "tools/call"
+    name: "get_account_info"
+    description: "Get current trading account information"
+    input_schema:
+      type: "object"
+      properties: {}
+      required: []
+    output_schema:
+      type: "object"
+      properties:
+        content:
+          type: "object"
+          properties:
+            login: { type: "number" }
+            trade_mode: { type: "number" }  # 0=DEMO, 1=REAL
+            balance: { type: "number" }
+            equity: { type: "number" }
+            margin: { type: "number" }
+            margin_free: { type: "number" }
+            currency: { type: "string" }
+            server: { type: "string" }
+            company: { type: "string" }
+    sla_ms: 150
+    critical_for_etapa2: true
+    validation_rules:
+      - "trade_mode must be 0 (DEMO) for safety"
+      - "balance > 1000 for minimum operation"
+
+  get_terminal_info:
+    method: "tools/call"
+    name: "get_terminal_info"
+    description: "Get MetaTrader 5 terminal information"
+    input_schema:
+      type: "object"
+      properties: {}
+      required: []
+    output_schema:
+      type: "object"
+      properties:
+        content:
+          type: "object"
+          properties:
+            connected: { type: "boolean" }
+            trade_allowed: { type: "boolean" }
+            build: { type: "number" }
+    sla_ms: 100
+    critical_for_etapa2: true
+
+  validate_demo_for_trading:
+    method: "tools/call"
+    name: "validate_demo_for_trading"
+    description: "Validate if account is DEMO before trading operations"
+    input_schema:
+      type: "object"
+      properties: {}
+      required: []
+    output_schema:
+      type: "object"
+      properties:
+        content:
+          type: "object"
+          properties:
+            is_demo: { type: "boolean" }
+            account_type: { type: "string" }
+            trading_allowed: { type: "boolean" }
+            warning: { type: "string" }
+    sla_ms: 100
+    critical_for_etapa2: true
+
+# =====================================
+# 2. MARKET DATA CONTRACTS (CRÍTICO)
+# =====================================
+
+market_data_tools:
+
+  get_symbol_info:
+    method: "tools/call"
+    name: "get_symbol_info"
+    description: "Get comprehensive symbol information including bid/ask/last"
+    input_schema:
+      type: "object"
+      properties:
+        symbol:
+          type: "string"
+          enum: ["ITSA3", "ITSA4", "PETR3", "PETR4", "VALE3"]
+          description: "B3 symbol code"
+      required: ["symbol"]
+    output_schema:
+      type: "object"
+      properties:
+        content:
+          type: "object"
+          properties:
+            # Preços críticos para decisão
+            bid: { type: "number", minimum: 0 }
+            ask: { type: "number", minimum: 0 }
+            last: { type: "number", minimum: 0 }
+            # Volume e dados de sessão
+            volume: { type: "number", minimum: 0 }
+            volume_real: { type: "number", minimum: 0 }
+            session_volume: { type: "number", minimum: 0 }
+            # Spread e configurações
+            spread: { type: "number", minimum: 0 }
+            spread_float: { type: "boolean" }
+            # Dados de tick
+            tick_bid: { type: "number", minimum: 0 }
+            tick_ask: { type: "number", minimum: 0 }
+            tick_last: { type: "number", minimum: 0 }
+            tick_time: { type: "number" }
+            tick_volume: { type: "number", minimum: 0 }
+            # Metadados do símbolo
+            name: { type: "string" }
+            description: { type: "string" }
+            currency_base: { type: "string" }
+            currency_profit: { type: "string" }
+            digits: { type: "number" }
+            # Configurações de trading
+            volume_min: { type: "number", minimum: 100 }
+            volume_max: { type: "number" }
+            volume_step: { type: "number", minimum: 100 }
+            trade_mode: { type: "number" }
+            trade_allowed: { type: "boolean" }
+    sla_ms: 50
+    critical_for_etapa2: true
+    business_rules:
+      - "bid > 0 and ask > 0 for valid quote"
+      - "ask >= bid (no negative spread)"
+      - "tick_time within last 60 seconds for fresh data"
+      - "volume_min = 100 (B3 standard lot)"
+
+  get_symbol_info_tick:
+    method: "tools/call"
+    name: "get_symbol_info_tick"  
+    description: "Get latest tick data for symbol"
+    input_schema:
+      type: "object"
+      properties:
+        symbol:
+          type: "string"
+          enum: ["ITSA3", "ITSA4", "PETR3", "PETR4", "VALE3"]
+      required: ["symbol"]
+    output_schema:
+      type: "object"
+      properties:
+        content:
+          type: "object"
+          properties:
+            bid: { type: "number", minimum: 0 }
+            ask: { type: "number", minimum: 0 }
+            last: { type: "number", minimum: 0 }
+            volume: { type: "number", minimum: 0 }
+            time: { type: "number" }
+            time_msc: { type: "number" }
+            flags: { type: "number" }
+    sla_ms: 50
+    critical_for_etapa2: true
+
+  symbol_select:
+    method: "tools/call"
+    name: "symbol_select"
+    description: "Add symbol to Market Watch window"
+    input_schema:
+      type: "object"
+      properties:
+        symbol:
+          type: "string"
+          enum: ["ITSA3", "ITSA4", "PETR3", "PETR4", "VALE3"]
+        visible:
+          type: "boolean"
+          default: true
+      required: ["symbol"]
+    output_schema:
+      type: "object"
+      properties:
+        content:
+          type: "boolean"
+    sla_ms: 200
+    critical_for_etapa2: true
+
+  copy_book_levels:
+    method: "tools/call"
+    name: "copy_book_levels"
+    description: "Get Level 2 market data (order book)"
+    input_schema:
+      type: "object"
+      properties:
+        symbol:
+          type: "string"
+          enum: ["ITSA3", "ITSA4"]
+        depth:
+          type: "number"
+          minimum: 1
+          maximum: 10
+          default: 5
+      required: ["symbol"]
+    output_schema:
+      type: "object" 
+      properties:
+        content:
+          type: "array"
+          items:
+            type: "object"
+            properties:
+              type: 
+                type: "number"
+                enum: [0, 1]  # 0=BUY, 1=SELL
+              price: { type: "number", minimum: 0 }
+              volume: { type: "number", minimum: 0 }
+              volume_real: { type: "number", minimum: 0 }
+    sla_ms: 100
+    critical_for_etapa2: false  # Nice to have para análise de liquidez
+
+# =====================================
+# 3. TRADING CONTRACTS (CRÍTICO)
+# =====================================
+
+trading_tools:
+
+  order_check:
+    method: "tools/call"
+    name: "order_check"
+    description: "Validate order before sending (dry-run)"
+    input_schema:
+      type: "object"
+      properties:
+        request:
+          type: "object"
+          properties:
+            action:
+              type: "number"
+              enum: [1]  # TRADE_ACTION_DEAL
+            symbol:
+              type: "string"
+              enum: ["ITSA3", "ITSA4"]
+            volume:
+              type: "number"
+              minimum: 100  # Lote mínimo B3
+              maximum: 10000  # Limite para demo
+            type:
+              type: "number"
+              enum: [0, 1]  # ORDER_TYPE_BUY, ORDER_TYPE_SELL
+            price: 
+              type: "number"
+              minimum: 0
+            sl:
+              type: "number" 
+              minimum: 0
+            tp:
+              type: "number"
+              minimum: 0
+            comment:
+              type: "string"
+              maxLength: 64
+            magic:
+              type: "number"
+              default: 234000
+          required: ["action", "symbol", "volume", "type"]
+      required: ["request"]
+    output_schema:
+      type: "object"
+      properties:
+        content:
+          type: "object"
+          properties:
+            retcode: { type: "number" }
+            balance: { type: "number" }
+            equity: { type: "number" }
+            profit: { type: "number" }
+            margin: { type: "number" }
+            margin_free: { type: "number" }
+            margin_level: { type: "number" }
+            comment: { type: "string" }
+    sla_ms: 200
+    critical_for_etapa2: true
+
+  order_send:
+    method: "tools/call"
+    name: "order_send"
+    description: "Send order to trade server"
+    input_schema:
+      type: "object"
+      properties:
+        request:
+          type: "object"
+          properties:
+            action:
+              type: "number"
+              enum: [1]  # TRADE_ACTION_DEAL apenas
+            symbol:
+              type: "string"
+              enum: ["ITSA3", "ITSA4"]
+            volume:
+              type: "number"
+              minimum: 100
+              maximum: 10000
+            type:
+              type: "number"
+              enum: [0, 1]  # BUY/SELL
+            price:
+              type: "number"
+              minimum: 0
+            sl:
+              type: "number"
+              minimum: 0
+            tp: 
+              type: "number"
+              minimum: 0
+            deviation:
+              type: "number"
+              default: 20
+              maximum: 50
+            comment:
+              type: "string"
+              maxLength: 64
+              pattern: "^ETAPA2-.*"  # Identificar ordens da ETAPA 2
+            magic:
+              type: "number"
+              default: 234000
+          required: ["action", "symbol", "volume", "type", "comment"]
+      required: ["request"]
+    output_schema:
+      type: "object"
+      properties:
+        content:
+          type: "object"
+          properties:
+            retcode: { type: "number" }
+            deal: { type: "number" }
+            order: { type: "number" }
+            volume: { type: "number" }
+            price: { type: "number" }
+            bid: { type: "number" }
+            ask: { type: "number" }
+            comment: { type: "string" }
+            request_id: { type: "number" }
+    sla_ms: 500
+    critical_for_etapa2: true
+    safety_rules:
+      - "ONLY execute if account is DEMO"
+      - "Maximum volume per order: 10000"
+      - "Comment must start with 'ETAPA2-'"
+
+  order_cancel:
+    method: "tools/call"
+    name: "order_cancel"
+    description: "Cancel pending order"
+    input_schema:
+      type: "object"
+      properties:
+        ticket:
+          type: "number"
+          minimum: 1
+      required: ["ticket"]
+    output_schema:
+      type: "object"
+      properties:
+        content:
+          type: "object"
+          properties:
+            retcode: { type: "number" }
+            comment: { type: "string" }
+    sla_ms: 300
+    critical_for_etapa2: true
+
+# =====================================
+# 4. POSITION MANAGEMENT CONTRACTS
+# =====================================
+
+position_tools:
+
+  positions_get:
+    method: "tools/call"
+    name: "positions_get"
+    description: "Get open positions"
+    input_schema:
+      type: "object"
+      properties:
+        symbol:
+          type: "string"
+          enum: ["ITSA3", "ITSA4", ""]  # Empty for all positions
+        group:
+          type: "string"
+      required: []
+    output_schema:
+      type: "object"
+      properties:
+        content:
+          type: "array"
+          items:
+            type: "object"
+            properties:
+              ticket: { type: "number" }
+              time: { type: "number" }
+              time_msc: { type: "number" }
+              time_update: { type: "number" }
+              time_update_msc: { type: "number" }
+              type: 
+                type: "number"
+                enum: [0, 1]  # POSITION_TYPE_BUY, POSITION_TYPE_SELL
+              magic: { type: "number" }
+              identifier: { type: "number" }
+              reason: { type: "number" }
+              volume: { type: "number", minimum: 0 }
+              price_open: { type: "number", minimum: 0 }
+              sl: { type: "number", minimum: 0 }
+              tp: { type: "number", minimum: 0 }
+              price_current: { type: "number", minimum: 0 }
+              swap: { type: "number" }
+              profit: { type: "number" }
+              symbol: { type: "string" }
+              comment: { type: "string" }
+              external_id: { type: "string" }
+    sla_ms: 100
+    critical_for_etapa2: true
+
+  position_modify:
+    method: "tools/call"
+    name: "position_modify"
+    description: "Modify Stop Loss and Take Profit of position"
+    input_schema:
+      type: "object"
+      properties:
+        ticket:
+          type: "number"
+          minimum: 1
+        sl:
+          type: "number"
+          minimum: 0
+        tp:
+          type: "number" 
+          minimum: 0
+      required: ["ticket"]
+    output_schema:
+      type: "object"
+      properties:
+        content:
+          type: "object"
+          properties:
+            retcode: { type: "number" }
+            comment: { type: "string" }
+    sla_ms: 300
+    critical_for_etapa2: true
+
+  orders_get:
+    method: "tools/call"
+    name: "orders_get"
+    description: "Get pending orders"
+    input_schema:
+      type: "object"
+      properties:
+        symbol:
+          type: "string"
+          enum: ["ITSA3", "ITSA4", ""]
+        group:
+          type: "string"
+      required: []
+    output_schema:
+      type: "object"
+      properties:
+        content:
+          type: "array"
+          items:
+            type: "object"
+            properties:
+              ticket: { type: "number" }
+              time_setup: { type: "number" }
+              time_setup_msc: { type: "number" }
+              time_expiration: { type: "number" }
+              type:
+                type: "number"
+                enum: [2, 3, 4, 5]  # ORDER_TYPE_BUY_LIMIT, etc
+              type_time: { type: "number" }
+              type_filling: { type: "number" }
+              state: { type: "number" }
+              magic: { type: "number" }
+              position_id: { type: "number" }
+              position_by_id: { type: "number" }
+              reason: { type: "number" }
+              volume_initial: { type: "number" }
+              volume_current: { type: "number" }
+              price_open: { type: "number" }
+              sl: { type: "number" }
+              tp: { type: "number" }
+              price_current: { type: "number" }
+              price_stoplimit: { type: "number" }
+              symbol: { type: "string" }
+              comment: { type: "string" }
+              external_id: { type: "string" }
+    sla_ms: 100
+    critical_for_etapa2: true
+
+# =====================================
+# 5. ERROR CODES & HANDLING
+# =====================================
+
+error_codes:
+  
+  # MT5 Success Codes
+  TRADE_RETCODE_DONE: 10009
+  TRADE_RETCODE_PLACED: 10008
+  TRADE_RETCODE_PARTIAL: 10007
+  
+  # MT5 Error Codes Critical for ETAPA 2
+  TRADE_RETCODE_REJECT: 10006          # Order rejected
+  TRADE_RETCODE_CANCEL: 10007          # Order cancelled by user  
+  TRADE_RETCODE_INVALID: 10013         # Invalid request
+  TRADE_RETCODE_INVALID_VOLUME: 10014  # Invalid volume
+  TRADE_RETCODE_INVALID_PRICE: 10015   # Invalid price
+  TRADE_RETCODE_INVALID_STOPS: 10016   # Invalid SL/TP
+  TRADE_RETCODE_TRADE_DISABLED: 10017  # Trading disabled
+  TRADE_RETCODE_MARKET_CLOSED: 10018   # Market closed
+  TRADE_RETCODE_NO_MONEY: 10019        # Insufficient funds
+  TRADE_RETCODE_PRICE_CHANGED: 10020   # Price changed
+  TRADE_RETCODE_PRICE_OFF: 10021       # Price off quotes
+  TRADE_RETCODE_INVALID_EXPIRATION: 10022  # Invalid expiration
+  TRADE_RETCODE_ORDER_CHANGED: 10023   # Order changed
+  TRADE_RETCODE_TIMEOUT: 10024         # Timeout
+  TRADE_RETCODE_INVALID_VOLUME: 10025  # Invalid volume
+  TRADE_RETCODE_POSITION_CLOSED: 10026 # Position closed
+
+  # Custom MCP Error Codes
+  MCP_ERROR_SYMBOL_NOT_FOUND: -1001   # Symbol not in Market Watch
+  MCP_ERROR_NOT_DEMO_ACCOUNT: -1002   # Not a demo account (safety)
+  MCP_ERROR_INVALID_SYMBOL: -1003     # Symbol not in allowed list
+  MCP_ERROR_VOLUME_TOO_LARGE: -1004   # Volume exceeds demo limits
+  MCP_ERROR_SPREAD_TOO_WIDE: -1005    # Spread > 1% (suspicious)
+  MCP_ERROR_STALE_QUOTE: -1006        # Quote older than 60 seconds
+  MCP_ERROR_SERVER_DISCONNECT: -1007  # MT5 server disconnected
+
+# =====================================
+# 6. BUSINESS RULES & CONSTRAINTS
+# =====================================
+
+business_rules:
+  
+  safety_constraints:
+    - name: "Demo Account Only"
+      rule: "All trading operations must verify trade_mode = 0 (DEMO)"
+      enforcement: "CRITICAL - Block all trading if REAL account"
+      
+    - name: "Symbol Whitelist"
+      rule: "Only allow ITSA3, ITSA4, PETR3, PETR4, VALE3"
+      enforcement: "Return MCP_ERROR_INVALID_SYMBOL for others"
+      
+    - name: "Volume Limits"
+      rule: "Minimum 100, Maximum 10000 shares per order"
+      enforcement: "Return MCP_ERROR_VOLUME_TOO_LARGE"
+      
+    - name: "Spread Validation"
+      rule: "Spread must be < 1% of price (detect stale/bad quotes)"
+      enforcement: "Return MCP_ERROR_SPREAD_TOO_WIDE"
+      
+    - name: "Comment Tracking"
+      rule: "All orders must have comment starting with 'ETAPA2-'"
+      enforcement: "For audit trail and identification"
+
+  data_quality_constraints:
+    - name: "Fresh Quotes"
+      rule: "tick_time must be within last 60 seconds"
+      enforcement: "Return MCP_ERROR_STALE_QUOTE"
+      
+    - name: "Valid Spreads"
+      rule: "ask >= bid and spread < 1% of mid price"
+      enforcement: "Reject quote and request refresh"
+      
+    - name: "Minimum Volume"
+      rule: "volume > 0 for valid quote"
+      enforcement: "Indicate low liquidity warning"
+
+  arbitrage_constraints:
+    - name: "Swap Decision Thresholds"
+      rule: "Premium PN > 0.5% after costs for viable arbitrage"
+      enforcement: "Used by decision engine logic"
+      
+    - name: "Maximum Position Size"  
+      rule: "Total exposure per symbol <= R$ 100,000 equivalent"
+      enforcement: "Risk management limit"
+      
+    - name: "Swap Frequency"
+      rule: "Maximum 1 swap operation per symbol per hour"
+      enforcement: "Prevent over-trading"
+
+# =====================================
+# 7. PERFORMANCE & MONITORING SPECS
+# =====================================
+
+performance_specs:
+  
+  latency_sla:
+    get_symbol_info: 50ms       # Critical path
+    get_symbol_info_tick: 50ms  # Critical path  
+    get_account_info: 150ms
+    order_check: 200ms          # Pre-flight check
+    order_send: 500ms           # Actual execution
+    positions_get: 100ms
+    orders_get: 100ms
+    
+  availability_sla:
+    uptime: 99.9%               # 8.76 hours downtime/year
+    max_consecutive_failures: 3  # Before circuit breaker
+    
+  monitoring_requirements:
+    - name: "Request Rate"
+      metric: "requests_per_second"
+      threshold: "> 10 RPS = warning"
+      
+    - name: "Error Rate" 
+      metric: "error_rate_percent"
+      threshold: "> 5% = critical alert"
+      
+    - name: "Latency P95"
+      metric: "latency_p95_ms"  
+      threshold: "> 2x SLA = warning"
+      
+    - name: "Spread Monitoring"
+      metric: "spread_percent_avg"
+      threshold: "> 0.5% = investigate"
+
+# =====================================
+# 8. INTEGRATION PATTERNS
+# =====================================
+
+integration_patterns:
+  
+  client_connection:
+    transport: "HTTP/1.1"
+    content_type: "application/json"
+    timeout_seconds: 30
+    retry_attempts: 3
+    retry_backoff: "exponential"  # 1s, 2s, 4s
+    
+  request_format:
+    jsonrpc: "2.0"
+    method: "tools/call"
+    params:
+      name: "tool_name"
+      arguments: {}
+    id: "sequential_integer"
+    
+  response_format:
+    jsonrpc: "2.0"  
+    id: "matching_request_id"
+    result:
+      content: {}  # Tool-specific response
+    # OR for errors:
+    error:
+      code: "error_code" 
+      message: "error_description"
+      
+  authentication:
+    type: "none"  # Internal network assumed secure
+    future: "API key or JWT token for production"
+    
+  rate_limiting:
+    max_requests_per_minute: 600  # 10 RPS average
+    burst_allowance: 60           # 1 RPS peak for 60 seconds
+    
+  circuit_breaker:
+    failure_threshold: 5      # Open circuit after 5 consecutive failures
+    recovery_timeout: 60      # Try recovery after 60 seconds
+    half_open_requests: 3     # Test with 3 requests before fully closing
+
+# =====================================
+# 9. TESTING & VALIDATION REQUIREMENTS  
+# =====================================
+
+testing_requirements:
+
+  contract_validation_tests:
+    - name: "Schema Validation"
+      description: "All requests/responses match YAML schemas"
+      automation: "JSON Schema validator"
+      
+    - name: "Data Type Validation" 
+      description: "All numeric fields are valid numbers, strings non-empty"
+      automation: "Type checking in client"
+      
+    - name: "Business Rule Validation"
+      description: "All business rules enforced correctly"
+      automation: "Rule engine tests"
+
+  performance_validation_tests:
+    - name: "SLA Compliance"
+      description: "All tools meet latency SLA under normal load"
+      automation: "Load testing suite"
+      
+    - name: "Stress Testing"
+      description: "System stable under 2x normal load"
+      automation: "Stress test scenarios"
+      
+    - name: "Error Handling"
+      description: "Graceful degradation under failure conditions"
+      automation: "Chaos engineering tests"
+
+  integration_validation_tests:  
+    - name: "End-to-End Scenarios"
+      description: "Complete ITSA3->ITSA4 swap flow"
+      automation: "E2E test suite"
+      
+    - name: "Data Consistency"
+      description: "Account balances, positions consistent across calls"
+      automation: "Consistency checker"
+      
+    - name: "Safety Validation"
+      description: "No trading on REAL accounts, volume limits enforced" 
+      automation: "Safety gate tests"
+
+# =====================================
+# 10. VERSION CONTROL & CHANGE MANAGEMENT
+# =====================================
+
+versioning:
+  current_version: "1.0.0"
+  change_approval: "Required for breaking changes"
+  backward_compatibility: "Maintain for 1 major version"
+  
+  change_categories:
+    breaking_changes:
+      - "Schema modifications (removing fields, changing types)"
+      - "SLA reductions"
+      - "New required fields"
+      approval_required: true
+      
+    non_breaking_changes:
+      - "New optional fields"
+      - "SLA improvements" 
+      - "New error codes"
+      approval_required: false
+      
+    documentation_changes:
+      - "Comments, descriptions, examples"
+      - "Business rule clarifications"
+      approval_required: false
+
+# =====================================
+# 11. EXAMPLES & REFERENCE IMPLEMENTATIONS
+# =====================================
+
+example_requests:
+
+  get_account_demo_check:
+    description: "Verify account is DEMO before any trading"
+    request:
+      jsonrpc: "2.0"
+      id: 1
+      method: "tools/call"
+      params:
+        name: "get_account_info"
+        arguments: {}
+    expected_response:
+      jsonrpc: "2.0"
+      id: 1
+      result:
+        content:
+          login: 72033102
+          trade_mode: 0  # 0 = DEMO
+          balance: 10094145.89
+          currency: "BRL"
+
+  get_itsa3_quote:
+    description: "Get current ITSA3 quote for arbitrage analysis"
+    request:
+      jsonrpc: "2.0" 
+      id: 2
+      method: "tools/call"
+      params:
+        name: "get_symbol_info"
+        arguments:
+          symbol: "ITSA3"
+    expected_response:
+      jsonrpc: "2.0"
+      id: 2  
+      result:
+        content:
+          bid: 11.26
+          ask: 11.27
+          last: 11.27
+          volume: 100
+          tick_time: 1756399116
+          spread: 0.01
+
+  validate_order_before_send:
+    description: "Check order validity before execution"
+    request:
+      jsonrpc: "2.0"
+      id: 3
+      method: "tools/call"
+      params:
+        name: "order_check"
+        arguments:
+          request:
+            action: 1  # TRADE_ACTION_DEAL
+            symbol: "ITSA3"
+            volume: 100
+            type: 0    # ORDER_TYPE_BUY
+            price: 11.27
+            comment: "ETAPA2-BUY-ITSA3-TEST"
+            magic: 234000
+    expected_response:
+      jsonrpc: "2.0"
+      id: 3
+      result:
+        content:
+          retcode: 0   # Success
+          balance: 10094145.89
+          margin_free: 10094145.89
+          comment: "Valid order"
+
+  execute_buy_order:
+    description: "Execute buy order for ITSA3" 
+    request:
+      jsonrpc: "2.0"
+      id: 4
+      method: "tools/call"
+      params:
+        name: "order_send"
+        arguments:
+          request:
+            action: 1
+            symbol: "ITSA3"
+            volume: 100
+            type: 0
+            price: 11.27
+            deviation: 20
+            comment: "ETAPA2-SWAP-BUY-ITSA3"
+            magic: 234000
+    expected_response:
+      jsonrpc: "2.0"
+      id: 4
+      result:
+        content:
+          retcode: 10009  # TRADE_RETCODE_DONE
+          deal: 123456789
+          order: 987654321
+          volume: 100
+          price: 11.27
+          comment: "Executed successfully"
+
+# =====================================
+# 12. COMPLIANCE & AUDIT REQUIREMENTS
+# =====================================
+
+compliance:
+  
+  audit_logging:
+    required_fields:
+      - "timestamp_iso"
+      - "request_id" 
+      - "tool_name"
+      - "input_parameters"
+      - "execution_time_ms"
+      - "success_flag"
+      - "error_code"
+      - "user_session"
+    retention_period: "7 years"
+    format: "JSON structured logs"
+    
+  trading_compliance:
+    demo_verification: "MANDATORY before each trading operation"
+    position_limits: "Maximum R$ 100,000 exposure per symbol" 
+    order_identification: "All orders must have ETAPA2- prefix"
+    risk_monitoring: "Real-time position and P&L tracking"
+    
+  data_protection:
+    sensitive_data:
+      - "Account login numbers"
+      - "Trading balances"
+      - "Position details"
+    protection_level: "Internal use only, encrypted in transit"
+    access_control: "Authenticated sessions only"
+
+  regulatory_considerations:
+    cvm_compliance: "Demo trading only - no regulatory reporting required"
+    b3_compliance: "Standard B3 symbol formats and lot sizes"
+    risk_disclosure: "All operations clearly marked as DEMO/TEST"

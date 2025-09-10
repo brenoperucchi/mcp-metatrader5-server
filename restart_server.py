@@ -9,6 +9,7 @@ import argparse
 import sys
 from pathlib import Path
 import time
+from server_config import server_config
 
 def restart_server(port=8000, wait_confirmation=True):
     """
@@ -26,6 +27,13 @@ def restart_server(port=8000, wait_confirmation=True):
     try:
         print(f"🔄 Disparando restart do servidor na porta {port}...")
         print(f"📁 Arquivo PID: {pid_file.absolute()}")
+        
+        # Mostrar configuração que será aplicada
+        config = server_config.get_server_config(port)
+        verbose_status = "✅ ATIVO" if config.get("verbose", False) else "❌ INATIVO"
+        print(f"📊 Modo verbose: {verbose_status}")
+        print(f"🔧 Host: {config.get('host', '0.0.0.0')}")
+        print(f"⚙️ Config MT5: {config.get('mt5_config', 'b3')}")
         
         if not pid_file.exists():
             print(f"⚠️  Arquivo PID não encontrado. Servidor pode não estar rodando.")

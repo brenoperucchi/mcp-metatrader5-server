@@ -9,10 +9,73 @@ from typing import Dict, List, Optional, Union, Any
 from datetime import datetime
 import os
 
-# Force mock for validation testing
-from . import mt5_mock as mt5
-MT5_AVAILABLE = False
-print("[DEBUG] Using MT5 mock - FORCED FOR TESTING")
+# Configuration management for verbose logging
+def is_verbose_enabled(port=8000):
+    """Check if verbose mode is enabled in JSON config"""
+    try:
+        import sys
+        from pathlib import Path
+        
+        # Add parent directory to path to import server_config
+        parent_dir = Path(__file__).parent.parent.parent
+        if str(parent_dir) not in sys.path:
+            sys.path.insert(0, str(parent_dir))
+        
+        from server_config import server_config
+        config = server_config.get_server_config(port)
+        return config.get("verbose", False)
+    except:
+        return False  # Default to non-verbose on error
+
+"""
+==================== MT5 INITIALIZATION MODES ====================
+
+This server supports two initialization modes:
+
+1. PRODUCTION MODE (Default):
+   - Uses real MetaTrader5 connection
+   - Requires MT5 installed and running on Windows
+   - Provides real market data and trading capabilities
+   - Set USE_MOCK=false or don't set it (default)
+
+2. DEVELOPMENT/MOCK MODE:
+   - Uses mt5_mock for development and testing
+   - Works on any platform (Linux, macOS, Windows)
+   - Returns simulated data for testing
+   - Set USE_MOCK=true in environment
+
+Usage:
+   # Production (real MT5):
+   python mcp_mt5_server.py
+   
+   # Development (mock):
+   USE_MOCK=true python mcp_mt5_server.py
+
+===================================================================
+"""
+
+# Check if we should use mock mode (default: False for production)
+USE_MOCK = os.environ.get('USE_MOCK', 'false').lower() in ['true', '1', 'yes']
+
+if USE_MOCK:
+    # Mock mode for development/testing
+    from . import mt5_mock as mt5
+    MT5_AVAILABLE = False
+    print("[INFO] Running in MOCK MODE - for development/testing")
+    print("[INFO] To use real MT5, run without USE_MOCK environment variable")
+else:
+    # Production mode - use real MT5
+    try:
+        import MetaTrader5 as mt5
+        MT5_AVAILABLE = True
+        print("[INFO] Running in PRODUCTION MODE - using real MetaTrader5")
+        print("[INFO] To use mock mode, set USE_MOCK=true")
+    except ImportError:
+        # Fallback to mock if MT5 is not available
+        print("[WARNING] MetaTrader5 not available, falling back to mock mode")
+        print("[WARNING] Install MetaTrader5: pip install MetaTrader5")
+        from . import mt5_mock as mt5
+        MT5_AVAILABLE = False
 
 import pandas as pd
 import numpy as np
@@ -29,8 +92,26 @@ logger = None
 # Global request counter for telemetry
 _request_count = 0
 
-# MT5 availability status (logged properly)
-mt5_status = "mock"  # Forced for testing
+# MT5 availability status (dynamically determined)
+if USE_MOCK:
+    mt5_status = "mock"
+elif MT5_AVAILABLE:
+    # Check if we can actually connect to MT5
+    try:
+        import MetaTrader5 as mt5
+        if mt5.initialize():
+            account_info = mt5.account_info()
+            if account_info:
+                mt5_status = "connected"
+            else:
+                mt5_status = "disconnected"
+        else:
+            mt5_status = "failed"
+    except:
+        mt5_status = "error"
+else:
+    mt5_status = "unavailable"
+
 print(f"[DEBUG] MT5 status: {mt5_status}, MT5_AVAILABLE: {MT5_AVAILABLE}")
 
 # Create the MCP server
@@ -97,12 +178,30 @@ class ConfigManager:
                 return True
             
             # For real MT5, try normal initialization
-            if mt5.initialize(path=self.current_config.mt5_path, portable=self.current_config.portable):
-                self.initialized = True
-                logger.info("MT5 initialization successful")
-                return True
-            else:
-                logger.error(f"MT5 initialization failed: {mt5.last_error()}")
+            try:
+                # Debug only if verbose
+                if is_verbose_enabled():
+                    import os
+                    path_exists = os.path.exists(self.current_config.mt5_path) if self.current_config.mt5_path else False
+                    logger.info(f"DEBUG: MT5 path: '{self.current_config.mt5_path}' (exists: {path_exists})")
+                
+                if mt5.initialize(path=self.current_config.mt5_path, portable=self.current_config.portable):
+                    self.initialized = True
+                    logger.info("MT5 initialization successful")
+                    return True
+                else:
+                    error_code = mt5.last_error()
+                    logger.error(f"MT5 initialization failed: {error_code}")
+                    
+                    # FALLBACK DISABLED - Let it crash!
+                    logger.error("MT5 initialization failed - fallback is disabled")
+                    
+                    # Do NOT mark as initialized - let it fail completely
+                    self.initialized = False
+                    return False  # Complete failure
+            except Exception as e:
+                logger.error(f"Exception during MT5 initialization: {e}")
+                self.initialized = False  # NO fallback - let it fail
                 return False
         
         return True

@@ -1,0 +1,32 @@
+connection_tools:
+  initialize:
+    sla_ms: 1000
+    critical_for_etapa2: true
+  get_account_info:
+    sla_ms: 150
+    critical_for_etapa2: true
+  get_terminal_info:
+    sla_ms: 100
+    critical_for_etapa2: true
+  validate_demo_for_trading:
+    sla_ms: 100
+    critical_for_etapa2: true
+
+market_data_tools:
+  get_symbol_info:
+    sla_ms: 50
+    critical_for_etapa2: true
+  get_symbol_info_tick:
+    sla_ms: 50
+    critical_for_etapa2: true
+  symbol_select:
+    sla_ms: 100
+    critical_for_etapa2: true
+  copy_book_levels:
+    sla_ms: 100
+    critical_for_etapa2: false
+
+trading_tools:
+  order_check:
+    sla_ms: 200
+    critical_for_etapa2: true

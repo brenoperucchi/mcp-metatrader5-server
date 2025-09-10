@@ -13,6 +13,7 @@ from pathlib import Path
 import threading
 import argparse
 import logging
+from server_config import server_config
 
 class ServerWatcher:
     def __init__(self, server_script="mcp_mt5_server.py", host="0.0.0.0", port=8000, check_interval=2):
@@ -23,6 +24,9 @@ class ServerWatcher:
         self.pid_file = Path(f"server_{port}.pid")
         self.server_process = None
         self.running = True
+        
+        # Salvar configuração básica (sem forçar verbose)
+        server_config.set_server_config(port, host=host)
         
         # Setup logging with date-based file pattern
         from datetime import datetime
@@ -74,14 +78,14 @@ class ServerWatcher:
             return False
     
     def start_server(self):
-        """Inicia o servidor"""
+        """Inicia o servidor usando configuração persistente"""
         try:
-            cmd = [
-                sys.executable,
-                str(self.server_script),
-                "--host", self.host,
-                "--port", str(self.port)
-            ]
+            # Usar configuração salva para gerar comando
+            cmd = server_config.get_launch_args(self.port)
+            
+            # Substituir 'python' pelo executável atual se necessário
+            if cmd[0] == "python":
+                cmd[0] = sys.executable
             
             self.logger.info(f"Starting server: {' '.join(cmd)}")
             
