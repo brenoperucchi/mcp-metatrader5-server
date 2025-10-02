@@ -229,13 +229,39 @@ def start_mcp_mt5_server(host: str = "0.0.0.0", port: int = 8000):
         from fastapi import FastAPI, Request
         from fastapi.responses import JSONResponse, PlainTextResponse
         from fastapi.middleware.cors import CORSMiddleware
+        from contextlib import asynccontextmanager
         import uvicorn
-        
-        # Create new FastAPI app
+
+        # Define lifespan context manager for startup/shutdown
+        @asynccontextmanager
+        async def lifespan(app: FastAPI):
+            """Lifespan context manager for startup and shutdown events"""
+            # Startup
+            global tick_persister_instance
+            if tick_persister_instance:
+                try:
+                    await tick_persister_instance.start()
+                    logger.info("✅ TickPersister started successfully")
+                except Exception as e:
+                    logger.error(f"❌ Failed to start TickPersister: {e}")
+                    tick_persister_instance = None
+
+            yield
+
+            # Shutdown
+            if tick_persister_instance:
+                try:
+                    await tick_persister_instance.stop()
+                    logger.info("✅ TickPersister stopped gracefully")
+                except Exception as e:
+                    logger.error(f"❌ Error stopping TickPersister: {e}")
+
+        # Create new FastAPI app with lifespan
         app = FastAPI(
             title="MetaTrader 5 MCP Server V2",
             description="Optimized HTTP server with MCP tools and REST endpoints",
-            version="2.0.0"
+            version="2.0.0",
+            lifespan=lifespan
         )
         
         # Add CORS middleware
@@ -1353,31 +1379,6 @@ Claude CLI: claude add mt5 --transport http --url "http://{host}:{port}/mcp"
                 "response_types": ["code"],
                 "scope": "openid profile mcp"
             })
-        
-        # Add FastAPI startup event for async initialization
-        @app.on_event("startup")
-        async def startup_event():
-            """Initialize tick persister on server startup"""
-            global tick_persister_instance
-            if tick_persister_instance:
-                try:
-                    await tick_persister_instance.start()
-                    logger.info("✅ TickPersister started successfully")
-                except Exception as e:
-                    logger.error(f"❌ Failed to start TickPersister: {e}")
-                    tick_persister_instance = None
-
-        # Add FastAPI shutdown event for graceful cleanup
-        @app.on_event("shutdown")
-        async def shutdown_event():
-            """Gracefully shutdown tick persister"""
-            global tick_persister_instance
-            if tick_persister_instance:
-                try:
-                    await tick_persister_instance.stop()
-                    logger.info("✅ TickPersister stopped gracefully")
-                except Exception as e:
-                    logger.error(f"❌ Error stopping TickPersister: {e}")
 
         # Print startup banner
         tick_status = "enabled" if tick_persister_instance else "disabled"
