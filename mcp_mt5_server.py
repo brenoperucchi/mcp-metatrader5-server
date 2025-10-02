@@ -36,6 +36,9 @@ except ImportError:
 # Global variable to store current server port
 CURRENT_SERVER_PORT = 8000
 
+# Global tick persister instance
+tick_persister_instance = None
+
 def is_verbose_enabled(port=None):
     """Check if verbose mode is enabled in JSON config"""
     if port is None:
@@ -197,7 +200,31 @@ def start_mcp_mt5_server(host: str = "0.0.0.0", port: int = 8000):
         if config_manager.current_config:
             logger.info(f"Config loaded: {config_manager.current_config.name}")
             logger.info(f"Market type: {config_manager.current_config.market_type}")
-        
+
+        # Initialize Tick Persister
+        global tick_persister_instance
+        try:
+            if CONFIG_AVAILABLE:
+                from server_config import server_config
+                server_cfg = server_config.get_server_config(port)
+                tick_config = server_cfg.get("tick_persistence", {})
+
+                if tick_config.get("enabled", False):
+                    from mcp_metatrader5_server.tick_persister import TickPersister, TickPersisterConfig
+
+                    persister_config = TickPersisterConfig(tick_config)
+                    tick_persister_instance = TickPersister(persister_config)
+
+                    # Start will be called in async context later
+                    logger.info("TickPersister configured and ready")
+                else:
+                    logger.info("TickPersister disabled in configuration")
+            else:
+                logger.warning("Server config not available, TickPersister disabled")
+        except Exception as e:
+            logger.warning(f"Failed to initialize TickPersister: {e}, continuing without persistence")
+            tick_persister_instance = None
+
         # Create FastAPI app with custom endpoints
         from fastapi import FastAPI, Request
         from fastapi.responses import JSONResponse, PlainTextResponse
@@ -477,6 +504,35 @@ def start_mcp_mt5_server(host: str = "0.0.0.0", port: int = 8000):
                                          'get_book_snapshot']:
                             if is_verbose_enabled():
                                 logger.info(f"MCP Calling market data tool: {tool_name}")
+                            
+                            # Special handling for tools with date parameters
+                            if tool_name in ['copy_rates_from_date', 'copy_rates_range', 'copy_ticks_from_date', 'copy_ticks_range']:
+                                from datetime import datetime
+                                # Convert string dates to datetime objects (naive, as MT5 expects)
+                                if 'date_from' in tool_args and isinstance(tool_args['date_from'], str):
+                                    try:
+                                        # Parse as timezone-aware, then convert to naive for MT5
+                                        dt_aware = datetime.fromisoformat(tool_args['date_from'].replace('Z', '+00:00'))
+                                        tool_args['date_from'] = dt_aware.replace(tzinfo=None)
+                                    except:
+                                        try:
+                                            tool_args['date_from'] = datetime.strptime(tool_args['date_from'], '%Y-%m-%dT%H:%M:%S')
+                                        except:
+                                            logger.warning(f"Could not parse date_from: {tool_args['date_from']}")
+                                            tool_args.pop('date_from', None)
+                                
+                                if 'date_to' in tool_args and isinstance(tool_args['date_to'], str):
+                                    try:
+                                        # Parse as timezone-aware, then convert to naive for MT5
+                                        dt_aware = datetime.fromisoformat(tool_args['date_to'].replace('Z', '+00:00'))
+                                        tool_args['date_to'] = dt_aware.replace(tzinfo=None)
+                                    except:
+                                        try:
+                                            tool_args['date_to'] = datetime.strptime(tool_args['date_to'], '%Y-%m-%dT%H:%M:%S')
+                                        except:
+                                            logger.warning(f"Could not parse date_to: {tool_args['date_to']}")
+                                            tool_args.pop('date_to', None)
+                            
                             func = getattr(market_data_module, tool_name, None)
                             if func and hasattr(func, 'fn'):
                                 result = func.fn(**tool_args)
@@ -1298,26 +1354,53 @@ Claude CLI: claude add mt5 --transport http --url "http://{host}:{port}/mcp"
                 "scope": "openid profile mcp"
             })
         
+        # Add FastAPI startup event for async initialization
+        @app.on_event("startup")
+        async def startup_event():
+            """Initialize tick persister on server startup"""
+            global tick_persister_instance
+            if tick_persister_instance:
+                try:
+                    await tick_persister_instance.start()
+                    logger.info("✅ TickPersister started successfully")
+                except Exception as e:
+                    logger.error(f"❌ Failed to start TickPersister: {e}")
+                    tick_persister_instance = None
+
+        # Add FastAPI shutdown event for graceful cleanup
+        @app.on_event("shutdown")
+        async def shutdown_event():
+            """Gracefully shutdown tick persister"""
+            global tick_persister_instance
+            if tick_persister_instance:
+                try:
+                    await tick_persister_instance.stop()
+                    logger.info("✅ TickPersister stopped gracefully")
+                except Exception as e:
+                    logger.error(f"❌ Error stopping TickPersister: {e}")
+
         # Print startup banner
+        tick_status = "enabled" if tick_persister_instance else "disabled"
         print(f"""
 ╔═══════════════════════════════════════════════════════════════════╗
 ║           🚀 MetaTrader 5 MCP Server V2                          ║
 ╠═══════════════════════════════════════════════════════════════════╣
-║ 📡 Server URL:     http://{host}:{port}/                              
-║ 🏥 Health Check:   http://{host}:{port}/health                        
-║ 📊 Server Info:    http://{host}:{port}/info                          
-║ ⚙️  Configuration:  http://{host}:{port}/config                        
-║ 🔧 MCP Endpoint:   http://{host}:{port}/mcp (41 tools expected)       
-║ 📁 PID File:       server_{port}.pid                                  
+║ 📡 Server URL:     http://{host}:{port}/
+║ 🏥 Health Check:   http://{host}:{port}/health
+║ 📊 Server Info:    http://{host}:{port}/info
+║ ⚙️  Configuration:  http://{host}:{port}/config
+║ 🔧 MCP Endpoint:   http://{host}:{port}/mcp (41 tools expected)
+║ 📁 PID File:       server_{port}.pid
+║ 💾 Tick Persist:   {tick_status}
 ╠═══════════════════════════════════════════════════════════════════╣
 ║ Claude CLI:                                                        ║
-║ claude add mt5 --transport http --url "http://{host}:{port}/mcp"          
+║ claude add mt5 --transport http --url "http://{host}:{port}/mcp"
 ╠═══════════════════════════════════════════════════════════════════╣
 ║ ✅ Server is running! Press Ctrl+C to stop                        ║
 ╚═══════════════════════════════════════════════════════════════════╝
 """)
-        
-        logger.info("Server ready")
+
+        logger.info(f"Server ready (Tick persistence: {tick_status})")
         
         # Configure uvicorn logging to suppress duplicate logs
         import logging as py_logging

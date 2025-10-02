@@ -48,6 +48,29 @@ def is_verbose_enabled(port=8000):
 
 logger = logging.getLogger("mt5-mcp-server.market_data")
 
+# Helper function for tick persistence
+async def _persist_tick_async(symbol: str, tick_data: Any):
+    """Helper to persist tick asynchronously without blocking"""
+    try:
+        import sys
+        if 'mcp_mt5_server' in sys.modules:
+            mcp_mt5_server = sys.modules['mcp_mt5_server']
+            if hasattr(mcp_mt5_server, 'tick_persister_instance'):
+                persister = mcp_mt5_server.tick_persister_instance
+                if persister:
+                    from datetime import datetime, timezone
+                    await persister.enqueue_tick({
+                        'symbol': symbol,
+                        'timestamp': datetime.now(timezone.utc),
+                        'bid': getattr(tick_data, 'bid', 0),
+                        'ask': getattr(tick_data, 'ask', 0),
+                        'last': getattr(tick_data, 'last', 0),
+                        'volume': getattr(tick_data, 'volume', 0)
+                    })
+    except Exception as e:
+        # Silently fail - persistence should not break the API
+        pass
+
 # Get symbols
 @mcp.tool()
 def get_symbols() -> List[str]:
@@ -167,13 +190,13 @@ def get_symbol_info(symbol: str) -> Dict[str, Any]:
 
 # Get symbol tick information
 @mcp.tool()
-def get_symbol_info_tick(symbol: str) -> Dict[str, Any]:
+async def get_symbol_info_tick(symbol: str) -> Dict[str, Any]:
     """
     Get the latest tick data for a symbol.
-    
+
     Args:
         symbol: Symbol name
-        
+
     Returns:
         Dict[str, Any]: Latest tick data for the symbol.
     """
@@ -181,12 +204,15 @@ def get_symbol_info_tick(symbol: str) -> Dict[str, Any]:
     if not config_manager.initialized:
         if not config_manager.initialize_mt5():
             raise ValueError("Failed to initialize MT5")
-    
+
     tick = mt5.symbol_info_tick(symbol)
     if tick is None:
         logger.error(f"Failed to get tick for symbol {symbol}, error code: {mt5.last_error()}")
         raise ValueError(f"Failed to get tick for symbol {symbol}")
-    
+
+    # Persist tick asynchronously (non-blocking)
+    await _persist_tick_async(symbol, tick)
+
     # Convert named tuple to dictionary
     return tick._asdict()
 
@@ -247,9 +273,9 @@ def copy_rates_from_pos(
     
     # Convert numpy array to list of dictionaries
     df = pd.DataFrame(rates)
-    # Convert time to datetime
+    # Convert time to ISO string for JSON serialization
     if 'time' in df.columns:
-        df['time'] = pd.to_datetime(df['time'], unit='s')
+        df['time'] = pd.to_datetime(df['time'], unit='s').dt.strftime('%Y-%m-%dT%H:%M:%SZ')
     
     return df.to_dict('records')
 
@@ -283,9 +309,9 @@ def copy_rates_from_date(
     
     # Convert numpy array to list of dictionaries
     df = pd.DataFrame(rates)
-    # Convert time to datetime
+    # Convert time to ISO string for JSON serialization
     if 'time' in df.columns:
-        df['time'] = pd.to_datetime(df['time'], unit='s')
+        df['time'] = pd.to_datetime(df['time'], unit='s').dt.strftime('%Y-%m-%dT%H:%M:%SZ')
     
     return df.to_dict('records')
 
@@ -320,9 +346,9 @@ def copy_rates_range(
     
     # Convert numpy array to list of dictionaries
     df = pd.DataFrame(rates)
-    # Convert time to datetime
+    # Convert time to ISO string for JSON serialization
     if 'time' in df.columns:
-        df['time'] = pd.to_datetime(df['time'], unit='s')
+        df['time'] = pd.to_datetime(df['time'], unit='s').dt.strftime('%Y-%m-%dT%H:%M:%SZ')
     
     return df.to_dict('records')
 
@@ -356,11 +382,11 @@ def copy_ticks_from_pos(
     
     # Convert numpy array to list of dictionaries
     df = pd.DataFrame(ticks)
-    # Convert time to datetime
+    # Convert time to ISO string for JSON serialization
     if 'time' in df.columns:
-        df['time'] = pd.to_datetime(df['time'], unit='s')
+        df['time'] = pd.to_datetime(df['time'], unit='s').dt.strftime('%Y-%m-%dT%H:%M:%SZ')
     if 'time_msc' in df.columns:
-        df['time_msc'] = pd.to_datetime(df['time_msc'], unit='ms')
+        df['time_msc'] = pd.to_datetime(df['time_msc'], unit='ms').dt.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
     
     return df.to_dict('records')
 
@@ -384,21 +410,23 @@ def copy_ticks_from_date(
     Returns:
         List[Dict[str, Any]]: List of ticks.
     """
-    # Convert datetime to timestamp in milliseconds
-    date_from_timestamp = int(date_from.timestamp() * 1000)
+    # MT5 copy_ticks_from expects datetime object, not timestamp
+    # Ensure datetime object is timezone-naive as required by MT5
+    if date_from.tzinfo is not None:
+        date_from = date_from.replace(tzinfo=None)
     
-    ticks = mt5.copy_ticks_from(symbol, date_from_timestamp, count, flags)
+    ticks = mt5.copy_ticks_from(symbol, date_from, count, flags)
     if ticks is None:
         logger.error(f"Failed to copy ticks for {symbol} from date {date_from}, error code: {mt5.last_error()}")
         raise ValueError(f"Failed to copy ticks for {symbol} from date {date_from}")
     
     # Convert numpy array to list of dictionaries
     df = pd.DataFrame(ticks)
-    # Convert time to datetime
+    # Convert time to ISO string for JSON serialization
     if 'time' in df.columns:
-        df['time'] = pd.to_datetime(df['time'], unit='s')
+        df['time'] = pd.to_datetime(df['time'], unit='s').dt.strftime('%Y-%m-%dT%H:%M:%SZ')
     if 'time_msc' in df.columns:
-        df['time_msc'] = pd.to_datetime(df['time_msc'], unit='ms')
+        df['time_msc'] = pd.to_datetime(df['time_msc'], unit='ms').dt.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
     
     return df.to_dict('records')
 
@@ -422,22 +450,25 @@ def copy_ticks_range(
     Returns:
         List[Dict[str, Any]]: List of ticks.
     """
-    # Convert datetime to timestamp in milliseconds
-    date_from_timestamp = int(date_from.timestamp() * 1000)
-    date_to_timestamp = int(date_to.timestamp() * 1000)
+    # MT5 copy_ticks_range expects datetime objects, not timestamps
+    # Ensure datetime objects are timezone-naive as required by MT5
+    if date_from.tzinfo is not None:
+        date_from = date_from.replace(tzinfo=None)
+    if date_to.tzinfo is not None:
+        date_to = date_to.replace(tzinfo=None)
     
-    ticks = mt5.copy_ticks_range(symbol, date_from_timestamp, date_to_timestamp, flags)
+    ticks = mt5.copy_ticks_range(symbol, date_from, date_to, flags)
     if ticks is None:
         logger.error(f"Failed to copy ticks for {symbol} in range {date_from} to {date_to}, error code: {mt5.last_error()}")
         raise ValueError(f"Failed to copy ticks for {symbol} in range {date_from} to {date_to}")
     
     # Convert numpy array to list of dictionaries
     df = pd.DataFrame(ticks)
-    # Convert time to datetime
+    # Convert time to ISO string for JSON serialization
     if 'time' in df.columns:
-        df['time'] = pd.to_datetime(df['time'], unit='s')
+        df['time'] = pd.to_datetime(df['time'], unit='s').dt.strftime('%Y-%m-%dT%H:%M:%SZ')
     if 'time_msc' in df.columns:
-        df['time_msc'] = pd.to_datetime(df['time_msc'], unit='ms')
+        df['time_msc'] = pd.to_datetime(df['time_msc'], unit='ms').dt.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
     
     return df.to_dict('records')
 
