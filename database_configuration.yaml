@@ -1,0 +1,305 @@
+# Database Configuration for MCP MetaTrader 5 Server
+# This file documents the database setup and connection options
+
+# =============================================================================
+# DATABASE OVERVIEW
+# =============================================================================
+database:
+  type: PostgreSQL
+  version: ">=13"
+  name: jumpstart_development
+  primary_schema: trading
+
+# =============================================================================
+# CONNECTION CONFIGURATION
+# =============================================================================
+connection:
+  # Primary connection (used by tick persistence)
+  primary:
+    host: localhost  # Change to macOS IP if PostgreSQL is remote
+    port: 5432
+    database: jumpstart_development
+    username: postgres
+    password: aszx12qw  # Or use ${DB_PASSWORD} environment variable
+    schema: trading
+
+  # Connection pool settings
+  pool:
+    size: 5
+    max_overflow: 10
+    timeout_seconds: 30
+
+  # Driver options
+  drivers:
+    synchronous: postgresql+psycopg2
+    asynchronous: postgresql+asyncpg  # Used by tick_persister.py
+
+# =============================================================================
+# NETWORK TOPOLOGY
+# =============================================================================
+# Current setup:
+#   - MCP Server: Windows (localhost: 0.0.0.0:8000)
+#   - PostgreSQL: macOS (location TBD)
+#   - Client: macOS (unified_trading_engine.py)
+
+network_options:
+
+  # Option 1: PostgreSQL on macOS (Remote Access)
+  remote_access:
+    description: "Windows MCP Server connects to PostgreSQL on macOS"
+    steps:
+      - "1. Find macOS IP: ifconfig | grep 'inet ' | grep -v 127.0.0.1"
+      - "2. Configure PostgreSQL pg_hba.conf on macOS:"
+      - "   host  jumpstart_development  postgres  <WINDOWS_IP>/32  md5"
+      - "3. Update server_config.json host to macOS IP"
+      - "4. Restart PostgreSQL on macOS: brew services restart postgresql"
+    config_example:
+      host: "192.168.1.100"  # Replace with actual macOS IP
+      port: 5432
+
+  # Option 2: SSH Tunnel (Secure)
+  ssh_tunnel:
+    description: "Create encrypted tunnel from Windows to macOS PostgreSQL"
+    steps:
+      - "1. On Windows PowerShell: ssh -L 5432:localhost:5432 user@macos-ip -N"
+      - "2. Keep tunnel running in background"
+      - "3. Use localhost:5432 in server_config.json (tunneled to macOS)"
+    config_example:
+      host: "localhost"  # Tunneled to macOS
+      port: 5432
+
+  # Option 3: PostgreSQL on Windows
+  local_windows:
+    description: "Install PostgreSQL natively on Windows"
+    steps:
+      - "1. Install PostgreSQL for Windows"
+      - "2. Create database: createdb jumpstart_development"
+      - "3. Restore schema from macOS dump"
+      - "4. Use localhost:5432 in config"
+    config_example:
+      host: "localhost"
+      port: 5432
+
+# =============================================================================
+# EXISTING TABLES (Schema: trading)
+# =============================================================================
+tables:
+
+  # Market Data Tables
+  market_data:
+    - name: mt5_ticks
+      description: "Real-time ticks from MT5"
+
+    - name: mt5_ticks_1s
+      description: "1-second OHLCV bars (used by tick persistence)"
+      columns:
+        - timestamp: TIMESTAMPTZ (PK)
+        - symbol: TEXT (PK)
+        - open: DOUBLE PRECISION
+        - high: DOUBLE PRECISION
+        - low: DOUBLE PRECISION
+        - close: DOUBLE PRECISION
+        - volume: BIGINT
+        - bid: DOUBLE PRECISION
+        - ask: DOUBLE PRECISION
+        - created_at: TIMESTAMPTZ
+      indexes:
+        - idx_mt5_ticks_1s_symbol_time: (symbol, timestamp DESC)
+
+    - name: mt5_book_levels
+      description: "Order book depth levels"
+
+    - name: rates
+      description: "Historical rate data"
+
+    - name: fundamentals
+      description: "Fundamental analysis data"
+
+    - name: dividends
+      description: "Dividend information"
+
+  # Options Tables
+  options:
+    - name: option_series
+      description: "Option series metadata"
+
+    - name: option_prices
+      description: "Option pricing data"
+
+    - name: iv_greeks
+      description: "Implied volatility and Greeks"
+
+  # Trading Tables
+  trading:
+    - name: trade_entries
+      description: "Trade entry records"
+
+    - name: trade_exits
+      description: "Trade exit records"
+
+    - name: partial_fills
+      description: "Partial fill tracking"
+
+    - name: spread_trades
+      description: "Spread trading records"
+
+    - name: execution_sessions
+      description: "Trading session metadata"
+
+  # Strategy Tables
+  strategy:
+    - name: arbitrage_signals
+      description: "Arbitrage opportunity signals"
+
+# =============================================================================
+# DATA SOURCE PRIORITY
+# =============================================================================
+data_sources:
+  priority_order:
+    1: "JSON in-memory cache"
+    2: "CSV fallback files (sync_folder/)"
+    3: "Synthetic data (testing only)"
+    4: "PostgreSQL database"
+
+# =============================================================================
+# TICK PERSISTENCE CONFIGURATION
+# =============================================================================
+tick_persistence:
+  enabled: true
+  target_table: trading.mt5_ticks_1s
+
+  # Batch settings
+  batch:
+    size: 20  # Number of ticks before flush
+    timeout_seconds: 5.0  # Max wait time before flush
+
+  # Backpressure control
+  backpressure:
+    max_queue_size: 1000  # Max ticks in memory queue
+    on_overflow: "drop_oldest"  # Strategy when queue is full
+
+  # Performance targets
+  performance:
+    max_latency_ms: 5  # Max latency added to tick streaming
+    min_throughput_tps: 100  # Minimum ticks per second supported
+
+  # Idempotency
+  conflict_resolution: "ON CONFLICT (timestamp, symbol) DO NOTHING"
+
+# =============================================================================
+# SECURITY & CREDENTIALS
+# =============================================================================
+security:
+  password_sources:
+    - environment_variable: DB_PASSWORD
+    - config_file: "server_config.json (fallback)"
+    - default: "postgres (dev only)"
+
+  recommendations:
+    - "Use environment variable DB_PASSWORD in production"
+    - "Enable SSL/TLS for remote connections"
+    - "Use read-only credentials for analytics"
+    - "Rotate passwords regularly"
+
+# =============================================================================
+# TROUBLESHOOTING
+# =============================================================================
+troubleshooting:
+
+  common_issues:
+
+    - issue: "unexpected connection_lost() call"
+      cause: "PostgreSQL not accessible from Windows"
+      solutions:
+        - "Verify PostgreSQL is running: sudo service postgresql status"
+        - "Check if host IP is correct (macOS IP if remote)"
+        - "Test connection: psql -h <host> -U postgres -d jumpstart_development"
+        - "Check firewall rules on macOS"
+
+    - issue: "No module named 'asyncpg'"
+      cause: "asyncpg not installed in Windows Python environment"
+      solution: "pip install asyncpg (in Windows Python, not WSL)"
+
+    - issue: "Connection refused"
+      cause: "PostgreSQL not listening on network interface"
+      solution: "Edit postgresql.conf: listen_addresses = '*'"
+
+    - issue: "Authentication failed"
+      cause: "Wrong password or pg_hba.conf not configured"
+      solutions:
+        - "Verify password matches DB_PASSWORD"
+        - "Check pg_hba.conf has correct host entry"
+        - "Reload PostgreSQL config: pg_ctl reload"
+
+# =============================================================================
+# MONITORING
+# =============================================================================
+monitoring:
+
+  # Database queries to monitor tick persistence
+  queries:
+
+    - name: "Check total persisted ticks"
+      sql: "SELECT COUNT(*) FROM trading.mt5_ticks_1s;"
+
+    - name: "Recent ticks by symbol"
+      sql: |
+        SELECT symbol, COUNT(*) as tick_count
+        FROM trading.mt5_ticks_1s
+        WHERE timestamp > NOW() - INTERVAL '1 hour'
+        GROUP BY symbol
+        ORDER BY tick_count DESC;
+
+    - name: "Latest ticks"
+      sql: |
+        SELECT *
+        FROM trading.mt5_ticks_1s
+        ORDER BY timestamp DESC
+        LIMIT 10;
+
+    - name: "Tick persistence rate"
+      sql: |
+        SELECT
+          DATE_TRUNC('minute', timestamp) as minute,
+          COUNT(*) as ticks_per_minute
+        FROM trading.mt5_ticks_1s
+        WHERE timestamp > NOW() - INTERVAL '10 minutes'
+        GROUP BY minute
+        ORDER BY minute DESC;
+
+  # Server logs to check
+  log_patterns:
+    success:
+      - "✅ TickPersister started successfully"
+      - "Batch persisted: X ticks in Yms"
+      - "Table trading.mt5_ticks_1s ready"
+
+    errors:
+      - "❌ Failed to start TickPersister"
+      - "Failed to persist batch"
+      - "Connection timeout"
+      - "Queue full - Dropped X ticks"
+
+# =============================================================================
+# MAINTENANCE
+# =============================================================================
+maintenance:
+
+  # Backup strategy
+  backup:
+    frequency: daily
+    command: "pg_dump -h localhost -U postgres -d jumpstart_development -t trading.mt5_ticks_1s > backup_$(date +%Y%m%d).sql"
+
+  # Data retention
+  retention:
+    tick_data: "30 days"  # Keep recent ticks
+    cleanup_query: |
+      DELETE FROM trading.mt5_ticks_1s
+      WHERE timestamp < NOW() - INTERVAL '30 days';
+
+  # Index maintenance
+  index_maintenance:
+    frequency: weekly
+    commands:
+      - "REINDEX TABLE trading.mt5_ticks_1s;"
+      - "VACUUM ANALYZE trading.mt5_ticks_1s;"
