@@ -456,8 +456,26 @@ def copy_ticks_range(
         date_from = date_from.replace(tzinfo=None)
     if date_to.tzinfo is not None:
         date_to = date_to.replace(tzinfo=None)
-    
+
+    # VERBOSE LOGGING for debugging
+    logger.info(f"🔍 copy_ticks_range called: symbol={symbol}, from={date_from}, to={date_to}, flags={flags}")
+
+    # Try to select symbol first (ensure it's in Market Watch)
+    try:
+        mt5.symbol_select(symbol, True)
+        logger.info(f"   Symbol {symbol} selected in Market Watch")
+    except Exception as e:
+        logger.warning(f"   Could not select symbol: {e}")
+
     ticks = mt5.copy_ticks_range(symbol, date_from, date_to, flags)
+
+    # VERBOSE LOGGING for result
+    if ticks is not None:
+        logger.info(f"✅ MT5 returned {len(ticks)} ticks")
+    else:
+        error = mt5.last_error()
+        logger.error(f"❌ MT5 returned None, error code: {error}")
+
     if ticks is None:
         logger.error(f"Failed to copy ticks for {symbol} in range {date_from} to {date_to}, error code: {mt5.last_error()}")
         raise ValueError(f"Failed to copy ticks for {symbol} in range {date_from} to {date_to}")
