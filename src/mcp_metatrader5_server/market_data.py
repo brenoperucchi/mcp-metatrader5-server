@@ -52,57 +52,60 @@ logger = logging.getLogger("mt5-mcp-server.market_data")
 async def _persist_tick_async(symbol: str, tick_data: Any):
     """Helper to persist tick asynchronously without blocking"""
     try:
-        import sys
-        if 'mcp_mt5_server' in sys.modules:
-            mcp_mt5_server = sys.modules['mcp_mt5_server']
-            if hasattr(mcp_mt5_server, 'tick_persister_instance'):
-                persister = mcp_mt5_server.tick_persister_instance
-                if persister:
-                    from datetime import datetime, timezone
-                    await persister.enqueue_tick({
-                        'symbol': symbol,
-                        'timestamp': datetime.now(timezone.utc),
-                        'bid': getattr(tick_data, 'bid', 0),
-                        'ask': getattr(tick_data, 'ask', 0),
-                        'last': getattr(tick_data, 'last', 0),
-                        'volume': getattr(tick_data, 'volume', 0)
-                    })
+        from mcp_metatrader5_server.tick_persister_registry import get_tick_persister
+
+        persister = get_tick_persister()
+        if persister:
+            from datetime import datetime, timezone
+            tick_dict = {
+                'symbol': symbol,
+                'timestamp': datetime.now(timezone.utc),
+                'bid': getattr(tick_data, 'bid', 0),
+                'ask': getattr(tick_data, 'ask', 0),
+                'last': getattr(tick_data, 'last', 0),
+                'volume': getattr(tick_data, 'volume', 0)
+            }
+            await persister.enqueue_tick(tick_dict)
+            if is_verbose_enabled():
+                logger.info(f"✅ Enqueued tick for {symbol}: bid={tick_dict['bid']}, ask={tick_dict['ask']}")
+        else:
+            if is_verbose_enabled():
+                logger.debug(f"⚠️  Tick persister not available - skipping persistence for {symbol}")
     except Exception as e:
-        # Silently fail - persistence should not break the API
-        pass
+        # Log error but don't break the API
+        logger.error(f"❌ Tick persistence error for {symbol}: {e}")
 
 async def _persist_ticks_batch_async(symbol: str, ticks_list: List[Dict[str, Any]]):
     """Helper to persist multiple ticks asynchronously without blocking"""
     try:
-        import sys
-        if 'mcp_mt5_server' in sys.modules:
-            mcp_mt5_server = sys.modules['mcp_mt5_server']
-            if hasattr(mcp_mt5_server, 'tick_persister_instance'):
-                persister = mcp_mt5_server.tick_persister_instance
-                if persister:
-                    from datetime import datetime, timezone
-                    for tick in ticks_list:
-                        # Convert tick timestamp to datetime if needed
-                        if 'time' in tick and isinstance(tick['time'], (int, float)):
-                            tick_time = datetime.fromtimestamp(tick['time'], tz=timezone.utc)
-                        elif 'time' in tick and isinstance(tick['time'], str):
-                            # Already ISO format, use current time
-                            tick_time = datetime.now(timezone.utc)
-                        else:
-                            tick_time = datetime.now(timezone.utc)
+        from mcp_metatrader5_server.tick_persister_registry import get_tick_persister
 
-                        await persister.enqueue_tick({
-                            'symbol': symbol,
-                            'timestamp': tick_time,
-                            'bid': tick.get('bid', 0),
-                            'ask': tick.get('ask', 0),
-                            'last': tick.get('last', 0),
-                            'volume': tick.get('volume', 0)
-                        })
+        persister = get_tick_persister()
+        if persister:
+            from datetime import datetime, timezone
+            for tick in ticks_list:
+                # Convert tick timestamp to datetime if needed
+                if 'time' in tick and isinstance(tick['time'], (int, float)):
+                    tick_time = datetime.fromtimestamp(tick['time'], tz=timezone.utc)
+                elif 'time' in tick and isinstance(tick['time'], str):
+                    # Already ISO format, use current time
+                    tick_time = datetime.now(timezone.utc)
+                else:
+                    tick_time = datetime.now(timezone.utc)
+
+                await persister.enqueue_tick({
+                    'symbol': symbol,
+                    'timestamp': tick_time,
+                    'bid': tick.get('bid', 0),
+                    'ask': tick.get('ask', 0),
+                    'last': tick.get('last', 0),
+                    'volume': tick.get('volume', 0)
+                })
+            if is_verbose_enabled() and len(ticks_list) > 0:
+                logger.info(f"✅ Enqueued {len(ticks_list)} ticks for {symbol}")
     except Exception as e:
-        # Silently fail - persistence should not break the API
-        logger.debug(f"Tick persistence error (non-critical): {e}")
-        pass
+        # Log error but don't break the API
+        logger.error(f"❌ Batch tick persistence error for {symbol}: {e}")
 
 # Get symbols
 @mcp.tool()

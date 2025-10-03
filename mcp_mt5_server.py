@@ -211,12 +211,16 @@ def start_mcp_mt5_server(host: str = "0.0.0.0", port: int = 8000):
 
                 if tick_config.get("enabled", False):
                     from mcp_metatrader5_server.tick_persister import TickPersister, TickPersisterConfig
+                    from mcp_metatrader5_server.tick_persister_registry import set_tick_persister
 
                     persister_config = TickPersisterConfig(tick_config)
                     tick_persister_instance = TickPersister(persister_config)
 
+                    # Register in global registry for access from market_data.py
+                    set_tick_persister(tick_persister_instance)
+
                     # Start will be called in async context later
-                    logger.info("TickPersister configured and ready")
+                    logger.info(f"TickPersister configured and ready (instance: {tick_persister_instance is not None})")
                 else:
                     logger.info("TickPersister disabled in configuration")
             else:
@@ -238,6 +242,7 @@ def start_mcp_mt5_server(host: str = "0.0.0.0", port: int = 8000):
             """Lifespan context manager for startup and shutdown events"""
             # Startup
             global tick_persister_instance
+            logger.info(f"Lifespan startup: tick_persister_instance = {tick_persister_instance}")
             if tick_persister_instance:
                 try:
                     await tick_persister_instance.start()
