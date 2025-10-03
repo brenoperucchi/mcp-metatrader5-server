@@ -4,7 +4,7 @@
       "port": 8000,
       "created": "2025-09-08T18:33:23.942529",
       "verbose": false,
-      "last_updated": "2025-10-02T19:34:33.689250",
+      "last_updated": "2025-10-03T01:21:21.055166",
       "host": "0.0.0.0",
       "mt5_config": "b3",
       "tick_persistence": {
@@ -31,6 +31,6 @@
   "global": {
     "created": "2025-09-08T18:33:23.940435",
     "version": "2.0.0",
-    "last_updated": "2025-10-02T19:34:33.689264"
+    "last_updated": "2025-10-03T01:21:21.055182"
   }
 }
