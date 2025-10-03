@@ -568,10 +568,9 @@ def start_mcp_mt5_server(host: str = "0.0.0.0", port: int = 8000):
                                 raise Exception(f"Market data tool '{tool_name}' not found")
 
                             # Handle async functions (like get_symbol_info_tick)
-                            import asyncio
                             import inspect
                             if inspect.iscoroutine(result):
-                                result = asyncio.run(result)
+                                result = await result
                         
                         # Trading tools (11 tools)
                         elif tool_name in ['order_send', 'order_check', 'order_cancel', 'order_modify', 
@@ -1076,10 +1075,9 @@ Access to 16 market data tools for comprehensive analysis.
                                 raise Exception(f"Market data tool '{tool_name}' not found")
 
                             # Handle async functions (like get_symbol_info_tick)
-                            import asyncio
                             import inspect
                             if inspect.iscoroutine(result):
-                                result = asyncio.run(result)
+                                result = await result
 
                             logger.info(f"Market data result type: {type(result)}, value: {result}")
                         
