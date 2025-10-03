@@ -71,6 +71,39 @@ async def _persist_tick_async(symbol: str, tick_data: Any):
         # Silently fail - persistence should not break the API
         pass
 
+async def _persist_ticks_batch_async(symbol: str, ticks_list: List[Dict[str, Any]]):
+    """Helper to persist multiple ticks asynchronously without blocking"""
+    try:
+        import sys
+        if 'mcp_mt5_server' in sys.modules:
+            mcp_mt5_server = sys.modules['mcp_mt5_server']
+            if hasattr(mcp_mt5_server, 'tick_persister_instance'):
+                persister = mcp_mt5_server.tick_persister_instance
+                if persister:
+                    from datetime import datetime, timezone
+                    for tick in ticks_list:
+                        # Convert tick timestamp to datetime if needed
+                        if 'time' in tick and isinstance(tick['time'], (int, float)):
+                            tick_time = datetime.fromtimestamp(tick['time'], tz=timezone.utc)
+                        elif 'time' in tick and isinstance(tick['time'], str):
+                            # Already ISO format, use current time
+                            tick_time = datetime.now(timezone.utc)
+                        else:
+                            tick_time = datetime.now(timezone.utc)
+
+                        await persister.enqueue_tick({
+                            'symbol': symbol,
+                            'timestamp': tick_time,
+                            'bid': tick.get('bid', 0),
+                            'ask': tick.get('ask', 0),
+                            'last': tick.get('last', 0),
+                            'volume': tick.get('volume', 0)
+                        })
+    except Exception as e:
+        # Silently fail - persistence should not break the API
+        logger.debug(f"Tick persistence error (non-critical): {e}")
+        pass
+
 # Get symbols
 @mcp.tool()
 def get_symbols() -> List[str]:
@@ -354,15 +387,15 @@ def copy_rates_range(
 
 # Copy ticks from position
 @mcp.tool()
-def copy_ticks_from_pos(
-    symbol: str, 
-    start_pos: int, 
-    count: int, 
+async def copy_ticks_from_pos(
+    symbol: str,
+    start_pos: int,
+    count: int,
     flags: int = mt5.COPY_TICKS_ALL
 ) -> List[Dict[str, Any]]:
     """
     Get ticks from a specified symbol starting from the specified position.
-    
+
     Args:
         symbol: Symbol name
         start_pos: Initial position for tick retrieval
@@ -371,7 +404,7 @@ def copy_ticks_from_pos(
             - mt5.COPY_TICKS_ALL: All ticks (default)
             - mt5.COPY_TICKS_INFO: Ticks containing bid and/or ask price changes
             - mt5.COPY_TICKS_TRADE: Ticks containing last price and volume changes
-        
+
     Returns:
         List[Dict[str, Any]]: List of ticks.
     """
@@ -379,34 +412,51 @@ def copy_ticks_from_pos(
     if ticks is None:
         logger.error(f"Failed to copy ticks for {symbol}, error code: {mt5.last_error()}")
         raise ValueError(f"Failed to copy ticks for {symbol}")
-    
+
     # Convert numpy array to list of dictionaries
     df = pd.DataFrame(ticks)
+
+    # Store original time values before conversion for persistence
+    ticks_records = []
+    for idx, row in df.iterrows():
+        tick_dict = {
+            'time': row.get('time'),  # Keep as timestamp
+            'bid': row.get('bid', 0),
+            'ask': row.get('ask', 0),
+            'last': row.get('last', 0),
+            'volume': row.get('volume', 0),
+            'flags': row.get('flags', 0)
+        }
+        ticks_records.append(tick_dict)
+
+    # Persist ticks asynchronously (non-blocking)
+    await _persist_ticks_batch_async(symbol, ticks_records)
+
     # Convert time to ISO string for JSON serialization
     if 'time' in df.columns:
         df['time'] = pd.to_datetime(df['time'], unit='s').dt.strftime('%Y-%m-%dT%H:%M:%SZ')
     if 'time_msc' in df.columns:
         df['time_msc'] = pd.to_datetime(df['time_msc'], unit='ms').dt.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-    
+
     return df.to_dict('records')
 
 # Copy ticks from date
 @mcp.tool()
-def copy_ticks_from_date(
-    symbol: str, 
-    date_from: datetime, 
-    count: int, 
+async def copy_ticks_from_date(
+    symbol: str,
+    date_from: datetime,
+    count: int,
     flags: int = mt5.COPY_TICKS_ALL
 ) -> List[Dict[str, Any]]:
     """
     Get ticks from a specified symbol starting from the specified date.
-    
+
     Args:
         symbol: Symbol name
         date_from: Start date for tick retrieval
         count: Number of ticks to retrieve
         flags: Type of requested ticks
-        
+
     Returns:
         List[Dict[str, Any]]: List of ticks.
     """
@@ -414,39 +464,56 @@ def copy_ticks_from_date(
     # Ensure datetime object is timezone-naive as required by MT5
     if date_from.tzinfo is not None:
         date_from = date_from.replace(tzinfo=None)
-    
+
     ticks = mt5.copy_ticks_from(symbol, date_from, count, flags)
     if ticks is None:
         logger.error(f"Failed to copy ticks for {symbol} from date {date_from}, error code: {mt5.last_error()}")
         raise ValueError(f"Failed to copy ticks for {symbol} from date {date_from}")
-    
+
     # Convert numpy array to list of dictionaries
     df = pd.DataFrame(ticks)
+
+    # Store original time values before conversion for persistence
+    ticks_records = []
+    for idx, row in df.iterrows():
+        tick_dict = {
+            'time': row.get('time'),  # Keep as timestamp
+            'bid': row.get('bid', 0),
+            'ask': row.get('ask', 0),
+            'last': row.get('last', 0),
+            'volume': row.get('volume', 0),
+            'flags': row.get('flags', 0)
+        }
+        ticks_records.append(tick_dict)
+
+    # Persist ticks asynchronously (non-blocking)
+    await _persist_ticks_batch_async(symbol, ticks_records)
+
     # Convert time to ISO string for JSON serialization
     if 'time' in df.columns:
         df['time'] = pd.to_datetime(df['time'], unit='s').dt.strftime('%Y-%m-%dT%H:%M:%SZ')
     if 'time_msc' in df.columns:
         df['time_msc'] = pd.to_datetime(df['time_msc'], unit='ms').dt.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-    
+
     return df.to_dict('records')
 
 # Copy ticks range
 @mcp.tool()
-def copy_ticks_range(
-    symbol: str, 
-    date_from: datetime, 
-    date_to: datetime, 
+async def copy_ticks_range(
+    symbol: str,
+    date_from: datetime,
+    date_to: datetime,
     flags: int = mt5.COPY_TICKS_ALL
 ) -> List[Dict[str, Any]]:
     """
     Get ticks from a specified symbol within the specified date range.
-    
+
     Args:
         symbol: Symbol name
         date_from: Start date for tick retrieval
         date_to: End date for tick retrieval
         flags: Type of requested ticks
-        
+
     Returns:
         List[Dict[str, Any]]: List of ticks.
     """
@@ -479,15 +546,32 @@ def copy_ticks_range(
     if ticks is None:
         logger.error(f"Failed to copy ticks for {symbol} in range {date_from} to {date_to}, error code: {mt5.last_error()}")
         raise ValueError(f"Failed to copy ticks for {symbol} in range {date_from} to {date_to}")
-    
+
     # Convert numpy array to list of dictionaries
     df = pd.DataFrame(ticks)
+
+    # Store original time values before conversion for persistence
+    ticks_records = []
+    for idx, row in df.iterrows():
+        tick_dict = {
+            'time': row.get('time'),  # Keep as timestamp
+            'bid': row.get('bid', 0),
+            'ask': row.get('ask', 0),
+            'last': row.get('last', 0),
+            'volume': row.get('volume', 0),
+            'flags': row.get('flags', 0)
+        }
+        ticks_records.append(tick_dict)
+
+    # Persist ticks asynchronously (non-blocking)
+    await _persist_ticks_batch_async(symbol, ticks_records)
+
     # Convert time to ISO string for JSON serialization
     if 'time' in df.columns:
         df['time'] = pd.to_datetime(df['time'], unit='s').dt.strftime('%Y-%m-%dT%H:%M:%SZ')
     if 'time_msc' in df.columns:
         df['time_msc'] = pd.to_datetime(df['time_msc'], unit='ms').dt.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-    
+
     return df.to_dict('records')
 
 # Get last error

@@ -9,38 +9,11 @@ import json
 from datetime import datetime, timedelta
 import sys
 
-# Auto-detect Windows host IP from WSL
-import socket
-import subprocess
-
-def get_windows_host_ip():
-    """Get Windows host IP when running from WSL"""
-    try:
-        # Method 1: Try localhost first (Windows exposes ports to WSL)
-        return "localhost"
-    except:
-        pass
-
-    try:
-        # Method 2: Get from resolv.conf
-        with open('/etc/resolv.conf', 'r') as f:
-            for line in f:
-                if 'nameserver' in line:
-                    ip = line.split()[1]
-                    # Skip public DNS
-                    if not ip.startswith('8.') and not ip.startswith('1.'):
-                        return ip
-    except:
-        pass
-
-    # Method 3: Use default WSL gateway (usually Windows host)
-    return "192.168.0.1"
-
-WINDOWS_HOST = get_windows_host_ip()
-MCP_SERVER_URL = f"http://{WINDOWS_HOST}:8000"
+# Running on Windows - use localhost
+MCP_SERVER_URL = "http://localhost:8000"
 SYMBOL = "ITSA3"
 
-print(f"WSL detected, trying to connect to Windows host at: {WINDOWS_HOST}")
+print(f"Running on Windows, connecting to: {MCP_SERVER_URL}")
 
 print("=" * 80)
 print("🔍 MCP Ticks Investigation - HTTP API Testing")
