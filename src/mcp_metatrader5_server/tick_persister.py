@@ -118,29 +118,22 @@ class TickPersister:
             self.config.enabled = False
 
     async def _ensure_table_exists(self):
-        """Create table if it doesn't exist"""
-        create_table_sql = f"""
-        CREATE TABLE IF NOT EXISTS {self.config.db_schema}.{self.config.db_table} (
-            timestamp TIMESTAMPTZ NOT NULL,
-            symbol TEXT NOT NULL,
-            open DOUBLE PRECISION,
-            high DOUBLE PRECISION,
-            low DOUBLE PRECISION,
-            close DOUBLE PRECISION,
-            volume BIGINT,
-            bid DOUBLE PRECISION,
-            ask DOUBLE PRECISION,
-            created_at TIMESTAMPTZ DEFAULT NOW(),
-            PRIMARY KEY (timestamp, symbol)
-        );
-
-        CREATE INDEX IF NOT EXISTS idx_mt5_ticks_1s_symbol_time
-        ON {self.config.db_schema}.{self.config.db_table} (symbol, timestamp DESC);
+        """Verify table exists and has correct structure"""
+        check_table_sql = f"""
+        SELECT column_name, data_type
+        FROM information_schema.columns
+        WHERE table_schema = '{self.config.db_schema}'
+        AND table_name = '{self.config.db_table}'
+        ORDER BY ordinal_position;
         """
 
         async with self.db_pool.acquire() as conn:
-            await conn.execute(create_table_sql)
-            logger.info(f"Table {self.config.db_schema}.{self.config.db_table} ready")
+            columns = await conn.fetch(check_table_sql)
+            if columns:
+                column_names = [col['column_name'] for col in columns]
+                logger.info(f"Table {self.config.db_schema}.{self.config.db_table} exists with columns: {column_names}")
+            else:
+                logger.warning(f"Table {self.config.db_schema}.{self.config.db_table} not found")
 
     async def enqueue_tick(self, tick: Dict[str, Any]):
         """
@@ -232,39 +225,37 @@ class TickPersister:
         start_time = asyncio.get_event_loop().time()
 
         try:
-            # Prepare batch insert with idempotent ON CONFLICT
+            # Prepare batch insert for mt5_ticks table structure
+            # Columns: symbol, bid, ask, volume, tick_time, created_at, updated_at
             insert_sql = f"""
             INSERT INTO {self.config.db_schema}.{self.config.db_table}
-            (timestamp, symbol, open, high, low, close, volume, bid, ask)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-            ON CONFLICT (timestamp, symbol) DO NOTHING
+            (symbol, bid, ask, volume, tick_time, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            ON CONFLICT (symbol, tick_time) DO NOTHING
             """
 
             # Convert ticks to PostgreSQL rows
             rows = []
+            now = datetime.now()  # Use naive datetime (no timezone)
+
             for tick in batch:
-                # Ensure timestamp is UTC
-                timestamp = tick.get("timestamp")
-                if isinstance(timestamp, datetime):
-                    if timestamp.tzinfo is None:
-                        timestamp = timestamp.replace(tzinfo=timezone.utc)
+                # Get tick_time (convert to naive if timezone-aware)
+                tick_time = tick.get("timestamp")
+                if isinstance(tick_time, datetime):
+                    if tick_time.tzinfo is not None:
+                        tick_time = tick_time.replace(tzinfo=None)
                 else:
                     # If timestamp is milliseconds
-                    timestamp = datetime.fromtimestamp(timestamp / 1000, tz=timezone.utc)
-
-                # Map tick to OHLC (use 'last' for all OHLC since it's a tick)
-                last_price = tick.get("last", tick.get("close", 0))
+                    tick_time = datetime.fromtimestamp(tick.get("timestamp", 0) / 1000)
 
                 rows.append((
-                    timestamp,
                     tick.get("symbol", "UNKNOWN"),
-                    last_price,  # open
-                    last_price,  # high
-                    last_price,  # low
-                    last_price,  # close
-                    tick.get("volume", 0),
                     tick.get("bid", 0),
-                    tick.get("ask", 0)
+                    tick.get("ask", 0),
+                    tick.get("volume", 0),
+                    tick_time,
+                    now,  # created_at
+                    now   # updated_at
                 ))
 
             # Bulk insert

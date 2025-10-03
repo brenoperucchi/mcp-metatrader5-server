@@ -4,19 +4,19 @@
       "port": 8000,
       "created": "2025-09-08T18:33:23.942529",
       "verbose": false,
-      "last_updated": "2025-10-02T01:37:29.800305",
+      "last_updated": "2025-10-02T19:34:33.689250",
       "host": "0.0.0.0",
       "mt5_config": "b3",
       "tick_persistence": {
         "enabled": true,
         "database": {
-          "host": "localhost",
+          "host": "192.168.0.235",
           "port": 5432,
           "database": "jumpstart_development",
           "schema": "trading",
-          "table": "mt5_ticks_1s",
+          "table": "mt5_ticks",
           "username": "postgres",
-          "password": "postgres"
+          "password": "aszx12qw"
         },
         "batch": {
           "size": 20,
@@ -31,6 +31,6 @@
   "global": {
     "created": "2025-09-08T18:33:23.940435",
     "version": "2.0.0",
-    "last_updated": "2025-10-02T01:37:29.800323"
+    "last_updated": "2025-10-02T19:34:33.689264"
   }
 }
