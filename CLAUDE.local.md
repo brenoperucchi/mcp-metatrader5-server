@@ -1,0 +1,4 @@
+- NEVER use upstream repository for GitHub actions - ONLY work with user's fork
+- MCP server auto-restart system: Use `python watch_server.py --port 8000` on Windows (keeps running), then `python restart_server.py --port 8000` from WSL to restart server after code changes
+- Fallback: MCP server runs manually on Windows (python mcp_mt5_server.py --port 8000) if watcher not available
+- LOGGING CONVENTION: All scripts created and executed within mcp_mt5_sync/ directory MUST save logs following the pattern: `logs/<script_name>/<log_file_name>_<timestamp>.<extension>`. Example: `mcp_mt5_sync/logs/audit_mcp/audit_20250829_140512.log`
